@@ -1,0 +1,25 @@
+{
+    # 내부 리버스프록시 전용 — TLS 없이 HTTP 8080으로만 동작
+    auto_https off
+}
+
+# ── Production (HTTP only, 포트폴리오 FrankenPHP가 TLS 처리) ─────────
+
+:8080 {
+    encode gzip
+
+    # API 요청: /api/* → Laravel
+    handle /api/* {
+        header {
+            Access-Control-Allow-Origin "https://zslab-shop.duckdns.org"
+            Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+        }
+        reverse_proxy api:8080
+    }
+
+    # 나머지 → Next.js
+    handle {
+        reverse_proxy frontend:3000
+    }
+}

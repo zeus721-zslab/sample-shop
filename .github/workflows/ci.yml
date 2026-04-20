@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  # ── Laravel tests ────────────────────────────────────────────────
+  laravel-test:
+    name: Laravel tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: zslab_test
+          MYSQL_USER: zslab
+          MYSQL_PASSWORD: test
+        ports: ["3306:3306"]
+        options: --health-cmd="healthcheck.sh --innodb_initialized" --health-interval=5s --health-timeout=5s --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: pdo_mysql, redis, zip, intl, bcmath
+          coverage: none
+
+      - name: Install Composer dependencies
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy .env.testing
+        working-directory: backend
+        run: cp .env.example .env.testing
+
+      - name: Generate app key
+        working-directory: backend
+        run: php artisan key:generate --env=testing
+
+      - name: Run migrations
+        working-directory: backend
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: zslab_test
+          DB_USERNAME: zslab
+          DB_PASSWORD: test
+        run: php artisan migrate --env=testing --force
+
+      - name: Run tests
+        working-directory: backend
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: zslab_test
+          DB_USERNAME: zslab
+          DB_PASSWORD: test
+        run: php artisan test --parallel
+
+  # ── Next.js typecheck ─────────────────────────────────────────────
+  frontend-typecheck:
+    name: Frontend typecheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Type check
+        working-directory: frontend
+        run: npx tsc --noEmit

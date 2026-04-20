@@ -1,0 +1,24 @@
+{
+    email admin@zslab.co.kr
+}
+
+# ── Staging ───────────────────────────────────────────────────────
+
+zslab-stg.duckdns.org {
+    encode gzip
+
+    # API 요청: /api/* → Laravel
+    handle /api/* {
+        header {
+            Access-Control-Allow-Origin "https://zslab-stg.duckdns.org"
+            Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+        }
+        reverse_proxy api:8080
+    }
+
+    # 나머지 → Next.js
+    handle {
+        reverse_proxy frontend:3000
+    }
+}

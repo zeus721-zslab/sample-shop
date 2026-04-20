@@ -1,0 +1,44 @@
+# Home directory clutter (git init은 /home/zslab에서)
+.bash_history
+.bash_logout
+.bash_profile
+.bashrc
+.cache/
+.config/
+.local/
+.npm/
+.nvm/
+.ssh/
+.composer/
+.pki/
+.gnupg/
+tmp/
+
+# Environment
+.env
+.env.*.local
+
+# Backend
+backend/vendor/
+backend/.env
+backend/storage/logs/*.log
+backend/storage/framework/cache/
+backend/storage/framework/sessions/
+backend/storage/framework/views/
+backend/bootstrap/cache/*.php
+backend/.phpunit.cache/
+
+# Frontend
+frontend/.next/
+frontend/node_modules/
+frontend/.env*.local
+
+# Socket
+socket/node_modules/
+
+# Docker volumes / runtime
+docker/caddy/data/
+
+# OS
+.DS_Store
+*.swp

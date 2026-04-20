@@ -1,0 +1,30 @@
+version: "3.9"
+
+# Staging override — extends docker-compose.yml
+# Usage: docker compose -f docker-compose.yml -f docker-compose.stg.yml up -d
+
+networks:
+  zslab_net:
+    driver: bridge
+
+services:
+  caddy:
+    volumes:
+      - ./docker/caddy/Caddyfile.stg:/etc/caddy/Caddyfile:ro
+
+  frontend:
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://api.zslab-stg.duckdns.org
+      - NEXT_PUBLIC_SOCKET_URL=https://zslab-stg.duckdns.org
+    build:
+      args:
+        - BUILD_ENV=staging
+
+  api:
+    environment:
+      - APP_ENV=staging
+    env_file: .env.stg
+
+  socket:
+    env_file: .env.stg
