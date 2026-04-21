@@ -46,10 +46,27 @@
           로그인
         </button>
       </form>
+
+      <hr class="my-4">
+      <div class="text-center">
+        <p class="text-muted small mb-2">계정 없이 둘러보고 싶으신가요?</p>
+        <button type="button" class="btn btn-outline-warning w-100 py-2 fw-semibold"
+                onclick="fillDemo()">
+          <i class="bi bi-eye me-2"></i>데모로 체험하기
+        </button>
+        <p class="text-muted mt-2" style="font-size:.75rem">읽기 전용 · 데이터 변경 불가</p>
+      </div>
     </div>
   </div>
   <p class="text-center mt-3 text-white-50 small">zslab shop admin panel</p>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function fillDemo() {
+  document.querySelector('input[name=email]').value = '{{ env("DEMO_EMAIL", "demo@zslab.com") }}';
+  document.querySelector('input[name=password]').value = '{{ env("DEMO_PASSWORD", "demo1234!") }}';
+  document.querySelector('form').submit();
+}
+</script>
 </body>
 </html>

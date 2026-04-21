@@ -10,7 +10,7 @@ class AuthController extends Controller
 {
     public function showLogin()
     {
-        if (Auth::check() && Auth::user()->role === 'admin') {
+        if (Auth::check() && in_array(Auth::user()->role, ['admin', 'demo'])) {
             return redirect()->route('admin.dashboard');
         }
         return view('admin.auth.login');
@@ -24,7 +24,7 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            if (Auth::user()->role !== 'admin') {
+            if (!in_array(Auth::user()->role, ['admin', 'demo'])) {
                 Auth::logout();
                 return back()->withErrors(['email' => '관리자 권한이 없습니다.']);
             }

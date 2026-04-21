@@ -6,13 +6,13 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class AdminAuth
+class DemoGuard
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'demo'])) {
-            return redirect()->route('admin.login')
-                ->with('error', '관리자 로그인이 필요합니다.');
+        if (Auth::check() && Auth::user()->role === 'demo' && !$request->isMethod('GET')) {
+            return redirect()->back()
+                ->with('error', '데모 계정은 조회만 가능합니다.');
         }
 
         return $next($request);

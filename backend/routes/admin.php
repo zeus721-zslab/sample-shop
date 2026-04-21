@@ -16,7 +16,7 @@ Route::prefix('zslab-manage')->name('admin.')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('admin.auth');
 
     // ── 인증 필요 영역 ──────────────────────────────────────────────────────
-    Route::middleware('admin.auth')->group(function () {
+    Route::middleware(['admin.auth', 'demo.guard'])->group(function () {
 
         Route::get('/',          fn () => redirect()->route('admin.dashboard'));
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

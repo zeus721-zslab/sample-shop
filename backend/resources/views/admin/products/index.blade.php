@@ -77,12 +77,16 @@
             </td>
             <td class="text-muted small">{{ $product->created_at->format('Y.m.d') }}</td>
             <td class="text-end pe-3">
+              @if(Auth::user()->role !== 'demo')
               <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-sm btn-outline-primary me-1">수정</a>
               <form action="{{ route('admin.products.destroy', $product) }}" method="POST" class="d-inline"
                     onsubmit="return confirm('삭제하시겠습니까?')">
                 @csrf @method('DELETE')
                 <button class="btn btn-sm btn-outline-danger">삭제</button>
               </form>
+              @else
+              <span class="text-muted small">조회 전용</span>
+              @endif
             </td>
           </tr>
           @empty

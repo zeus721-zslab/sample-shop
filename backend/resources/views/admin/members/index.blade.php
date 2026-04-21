@@ -63,6 +63,7 @@
             </td>
             <td class="text-muted small">{{ $member->created_at->format('Y.m.d') }}</td>
             <td class="text-end pe-3">
+              @if(Auth::user()->role !== 'demo')
               <div class="d-flex gap-1 justify-content-end">
                 {{-- 등급 변경 --}}
                 <form method="POST" action="{{ route('admin.members.grade', $member) }}" class="d-inline">
@@ -87,6 +88,9 @@
                   </button>
                 </form>
               </div>
+              @else
+              <span class="text-muted small">조회 전용</span>
+              @endif
             </td>
           </tr>
           @empty

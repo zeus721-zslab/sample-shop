@@ -5,6 +5,7 @@
 @section('content')
 <div class="row g-4">
   {{-- 카테고리 추가 --}}
+  @if(Auth::user()->role !== 'demo')
   <div class="col-12 col-lg-4">
     <div class="card border-0 shadow-sm">
       <div class="card-header bg-transparent fw-semibold">카테고리 추가</div>
@@ -41,9 +42,10 @@
       </div>
     </div>
   </div>
+  @endif
 
   {{-- 카테고리 목록 --}}
-  <div class="col-12 col-lg-8">
+  <div class="col-12 {{ Auth::user()->role !== 'demo' ? 'col-lg-8' : '' }}">
     <div class="card border-0 shadow-sm">
       <div class="card-header bg-transparent fw-semibold">카테고리 목록</div>
       <div class="card-body p-0">
@@ -57,6 +59,7 @@
               @endif
               <small class="text-muted">순서: {{ $parent->sort_order }}</small>
             </div>
+            @if(Auth::user()->role !== 'demo')
             <div class="d-flex gap-1">
               <button class="btn btn-sm btn-outline-primary"
                       onclick="openEdit({{ $parent->id }}, '{{ addslashes($parent->name) }}', {{ $parent->sort_order }}, {{ $parent->is_active ? 'true' : 'false' }})">
@@ -68,6 +71,7 @@
                 <button class="btn btn-sm btn-outline-danger">삭제</button>
               </form>
             </div>
+            @endif
           </div>
           @if($parent->children->count())
           <div class="ms-4 row g-1">
@@ -76,6 +80,7 @@
               <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1 py-1 px-2">
                 {{ $child->name }}
                 @if(!$child->is_active) <i class="bi bi-eye-slash text-muted"></i> @endif
+                @if(Auth::user()->role !== 'demo')
                 <button class="btn btn-link btn-sm p-0 text-primary ms-1"
                         onclick="openEdit({{ $child->id }}, '{{ addslashes($child->name) }}', {{ $child->sort_order }}, {{ $child->is_active ? 'true' : 'false' }})"
                         title="수정">
@@ -87,6 +92,7 @@
                   <button class="btn btn-link btn-sm p-0 text-danger"
                           title="삭제"><i class="bi bi-x" style="font-size:.9rem"></i></button>
                 </form>
+                @endif
               </span>
             </div>
             @endforeach

@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'shop.mode'  => \App\Http\Middleware\ShopMode::class,
             'admin.auth' => \App\Http\Middleware\AdminAuth::class,
+            'demo.guard' => \App\Http\Middleware\DemoGuard::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

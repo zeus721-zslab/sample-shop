@@ -82,6 +82,7 @@
             {{ $labels[$order->status] ?? $order->status }}
           </span>
         </p>
+        @if(Auth::user()->role !== 'demo')
         <form action="{{ route('admin.orders.status', $order) }}" method="POST">
           @csrf @method('PATCH')
           <div class="input-group">
@@ -93,6 +94,9 @@
             <button class="btn btn-dark" type="submit">변경</button>
           </div>
         </form>
+        @else
+        <p class="text-muted small mb-0"><i class="bi bi-lock me-1"></i>데모 계정은 상태 변경이 불가합니다.</p>
+        @endif
       </div>
     </div>
   </div>

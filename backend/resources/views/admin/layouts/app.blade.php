@@ -106,14 +106,23 @@
           <div class="col">
             <h4 class="mb-0 fw-semibold">@yield('page-title', '관리자 패널')</h4>
           </div>
+          @if(Auth::user()->role !== 'demo')
           <div class="col-auto">
             @yield('page-actions')
           </div>
+          @endif
         </div>
       </div>
     </div>
     <div class="app-content py-3 px-4">
       <div class="container-fluid px-0">
+
+        @if(Auth::user()->role === 'demo')
+          <div class="alert alert-warning d-flex align-items-center mb-3 py-2" role="alert">
+            <i class="bi bi-eye me-2 fs-5"></i>
+            <div><strong>읽기 전용 데모 계정입니다.</strong> 조회만 가능하며 데이터 변경은 제한됩니다.</div>
+          </div>
+        @endif
 
         @if(session('success'))
           <div class="alert alert-success alert-dismissible fade show" role="alert">

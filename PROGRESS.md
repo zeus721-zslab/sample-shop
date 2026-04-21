@@ -376,6 +376,36 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - 상품/주문/회원/카테고리 관리 각 200 ✓
 - API 기존 동작 정상 ✓
 
+## 완료된 작업 (관리자 패널 데모 계정)
+
+### STEP 47: 읽기 전용 데모 계정 구현
+- URL: https://zslab-shop.duckdns.org/zslab-manage/
+- 데모 로그인: demo@zslab.com / demo1234!
+
+**백엔드:**
+- `DemoSeeder` — demo@zslab.com 계정 생성 (role=demo, .env에서 읽음)
+- `AdminAuth.php` — role=admin 또는 role=demo 접근 허용
+- `AuthController` — login/showLogin에 demo role 허용 추가
+- `DemoGuard.php` — role=demo 시 GET 외 요청 차단 + 플래시 메시지
+- `bootstrap/app.php` — `demo.guard` alias 추가
+- `routes/admin.php` — 인증 필요 그룹에 `demo.guard` 미들웨어 추가
+- `.env` / `.env.example` — DEMO_EMAIL, DEMO_PASSWORD 추가
+
+**뷰:**
+- `layouts/app.blade.php` — 데모 배너(노란색) + page-actions 숨김
+- `products/index.blade.php` — 수정/삭제 버튼 → "조회 전용" 텍스트
+- `orders/show.blade.php` — 상태 변경 폼 → lock 아이콘 + 안내 메시지
+- `members/index.blade.php` — 등급변경/정지 버튼 → "조회 전용" 텍스트
+- `categories/index.blade.php` — 추가 폼 패널 숨김 + 수정/삭제 버튼 숨김
+- `auth/login.blade.php` — "데모로 체험하기" 버튼 (자동 입력 + 제출)
+
+**검증:**
+- demo@zslab.com 로그인 → 대시보드 200 ✓
+- 읽기 전용 배너 표시 ✓
+- 상품 목록 "조회 전용" 표시 ✓
+- 주문 상세 상태 변경 차단 메시지 ✓
+- "데모로 체험하기" 버튼 렌더링 ✓
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
