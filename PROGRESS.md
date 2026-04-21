@@ -346,6 +346,36 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - 현재 인증서: /home/gateway/certs/ (Caddy에서 추출, 유효 2026-07-19)
 - 갱신 방법: certbot 또는 Caddy를 이용해 재발급 후 /home/gateway/certs/ 업데이트 필요
 
+## 완료된 작업 (관리자 패널)
+
+### STEP 46: 관리자 패널 (AdminLTE 4 기반)
+- URL: https://zslab-shop.duckdns.org/zslab-manage/
+- 로그인: admin@zslab.com / zslab@admin2026!
+
+**백엔드 (Laravel Web 세션 기반):**
+- `routes/admin.php` — 21개 라우트 (`zslab-manage` prefix)
+- `bootstrap/app.php` — admin 라우트 등록 (`then:` 콜백) + `admin.auth` 미들웨어 alias 추가
+- `AdminAuth.php` — 세션 인증 미들웨어 (role=admin 체크)
+- Controllers: Auth/Dashboard/Product/Order/Member/Category
+
+**뷰 (AdminLTE 4 + Bootstrap 5 + Bootstrap Icons):**
+- `admin/layouts/app.blade.php` — 공통 레이아웃 (사이드바, 네비바)
+- `admin/auth/login.blade.php` — 로그인 페이지
+- `admin/dashboard/index.blade.php` — KPI 카드 + 최근 주문/회원
+- `admin/products/` — index / create / edit / _form
+- `admin/orders/` — index / show (상태 변경)
+- `admin/members/index.blade.php` — 등급 변경 + 활성/정지 토글
+- `admin/categories/index.blade.php` — 대/소분류 목록 + 수정 모달
+
+**인프라:**
+- `docker/caddy/Caddyfile` — `/zslab-manage*`, `/storage/*` → Laravel 라우팅 추가
+- `AdminSeeder` — admin@zslab.com 계정 생성 (updateOrCreate)
+
+**검증:**
+- 로그인 → 302 → 대시보드 200 ✓
+- 상품/주문/회원/카테고리 관리 각 200 ✓
+- API 기존 동작 정상 ✓
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
