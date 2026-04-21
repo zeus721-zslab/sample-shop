@@ -297,8 +297,15 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - "멀티" 검색 → "멀티비타민 90정" 1위 노출 ✓
 - "비타민" 검색 → "멀티비타민 90정" 1위 + "비타민C 세럼 30ml" 노출 ✓
 
+## 완료된 작업 (GitHub Push 준비)
+
+### STEP 43: GitHub Push 준비
+- .gitignore 보완: `.claude/`, `.claude.json`, `.docker/`, `.zshrc`, `.zsh_history` 추가
+- 커밋: feat: 고객 사이트 프론트 완성 + API 마무리 + 버그 수정 (54 files, 5674 insertions)
+- remote: https://github.com/zeus721-zslab/zslab-shop.git ✓
+
 ## 다음 작업
-- GitHub PAT 설정 후 push
+- GitHub PAT 또는 SSH 키 설정 후 `git push origin main`
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
 - 소셜 로그인 (Google/Kakao) 실제 연동
 
