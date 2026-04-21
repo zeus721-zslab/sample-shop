@@ -7,6 +7,7 @@ use App\Services\Payment\MockPaymentGateway;
 use App\Services\Payment\PortonePaymentGateway;
 use App\Services\ReviewService;
 use App\Services\SearchService;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        if (str_starts_with(config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
     }
 }
