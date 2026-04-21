@@ -34,7 +34,7 @@
 
 ![Laravel](https://img.shields.io/badge/Laravel_13-FF2D20?style=flat-square&logo=laravel&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP_8.5-777BB4?style=flat-square&logo=php&logoColor=white)
-![FrankenPHP](https://img.shields.io/badge/FrankenPHP_Worker-6C41A1?style=flat-square)
+![FrankenPHP](https://img.shields.io/badge/FrankenPHP-6C41A1?style=flat-square)
 
 **Data / Search / Realtime**
 
@@ -74,14 +74,8 @@
           │
           ▼
 ┌──────────────────────────────────┐
-│  FrankenPHP  (포트폴리오 서버)    │  TLS 종료 · 도메인 분기
-│  포트 80 / 443 마스터             │  zslab-shop.duckdns.org → zslab_caddy
-└───────────────┬──────────────────┘
-                │ HTTP proxy → zslab_caddy:8080
-                ▼
-┌──────────────────────────────────┐
-│         zslab Caddy              │  내부 HTTP 8080, path-based 라우팅
-│         zslab_zslab_net          │
+│          Caddy (Reverse Proxy)   │  TLS 종료 · path-based 라우팅
+│          Let's Encrypt 자동 HTTPS │
 └────────┬─────────────┬───────────┘
          │  /*         │  /api/*
          ▼             ▼
@@ -103,8 +97,7 @@
 
 | 네트워크 | 역할 |
 |----------|------|
-| `zslab_zslab_net` | zslab 서비스 내부 통신 (Caddy ↔ Next.js ↔ Laravel ↔ DB) |
-| `portfolio_portfolio_net` | FrankenPHP ↔ zslab Caddy 연결 (external, shared) |
+| `zslab_zslab_net` | 서비스 내부 통신 (Caddy ↔ Next.js ↔ Laravel ↔ DB) |
 
 ---
 
