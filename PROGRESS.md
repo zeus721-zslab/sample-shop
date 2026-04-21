@@ -299,6 +299,12 @@ curl https://api.zslab-shop.duckdns.org/api/health
 
 ## 완료된 작업 (GitHub Push 준비)
 
+### STEP 44: README.md 전면 재작성
+- TOC 추가, 뱃지 보강 (Zustand, Socket.io, Caddy 추가)
+- API Overview 35개 엔드포인트 전체 나열
+- CI/CD 테이블 정리, Docker 네트워크 테이블 추가
+- 디렉토리 구조 상세화
+
 ### STEP 43: GitHub Push 준비
 - .gitignore 보완: `.claude/`, `.claude.json`, `.docker/`, `.zshrc`, `.zsh_history` 추가
 - 커밋: feat: 고객 사이트 프론트 완성 + API 마무리 + 버그 수정 (54 files, 5674 insertions)
