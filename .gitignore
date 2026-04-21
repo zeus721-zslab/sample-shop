@@ -39,6 +39,17 @@ socket/node_modules/
 # Docker volumes / runtime
 docker/caddy/data/
 
+# Claude Code
+.claude/
+.claude.json
+
+# Docker user config / buildx cache
+.docker/
+
+# Shell config
+.zshrc
+.zsh_history
+
 # OS
 .DS_Store
 *.swp

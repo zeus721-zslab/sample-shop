@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class OrderItem extends Model
 {
     protected $fillable = [
-        'order_id', 'product_id', 'product_name', 'unit_price', 'quantity', 'subtotal', 'options',
+        'order_id', 'product_id', 'product_name', 'product_image', 'unit_price', 'quantity',
+        'subtotal', 'total_price', 'options',
     ];
 
     protected $casts = [
@@ -23,5 +25,10 @@ class OrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class, 'order_item_id');
     }
 }

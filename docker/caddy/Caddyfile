@@ -8,13 +8,8 @@
 :8080 {
     encode gzip
 
-    # API 요청: /api/* → Laravel
+    # API 요청: /api/* → Laravel (CORS는 Laravel HandleCors 미들웨어가 처리)
     handle /api/* {
-        header {
-            Access-Control-Allow-Origin "https://zslab-shop.duckdns.org"
-            Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-            Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
-        }
         reverse_proxy api:8080
     }
 
