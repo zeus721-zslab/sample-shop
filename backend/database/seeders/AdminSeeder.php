@@ -10,16 +10,18 @@ class AdminSeeder extends Seeder
 {
     public function run(): void
     {
+        $email = env('ADMIN_EMAIL', 'admin@zslab.com');
+
         User::updateOrCreate(
-            ['email' => 'admin@zslab.com'],
+            ['email' => $email],
             [
                 'name'      => 'zslab 관리자',
-                'password'  => Hash::make('zslab@admin2026!'),
+                'password'  => Hash::make(env('ADMIN_PASSWORD', 'change_me_password')),
                 'role'      => 'admin',
                 'is_active' => true,
             ]
         );
 
-        $this->command->info('Admin user created: admin@zslab.com / zslab@admin2026!');
+        $this->command->info("Admin user created: {$email}");
     }
 }
