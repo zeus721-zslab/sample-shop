@@ -2,8 +2,9 @@ version: "3.9"
 networks:
   zslab_net:
     driver: bridge
-  portfolio_portfolio_net:
+  gateway_net:
     external: true
+    name: gateway_net
 volumes:
   mariadb_data:
   redis_data:
@@ -15,14 +16,14 @@ services:
     build: ./docker/caddy
     container_name: zslab_caddy
     restart: unless-stopped
-    # 포트 외부 노출 없음 — 포트폴리오 FrankenPHP가 마스터로 프록시
+    # 포트 외부 노출 없음 — Nginx 게이트웨이가 TLS 처리 후 :8080으로 프록시
     volumes:
       - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_certs:/root/.local/share/caddy
     networks:
       - zslab_net
-      - portfolio_portfolio_net
+      - gateway_net
     depends_on:
       - frontend
       - api

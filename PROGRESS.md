@@ -310,8 +310,44 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - 커밋: feat: 고객 사이트 프론트 완성 + API 마무리 + 버그 수정 (54 files, 5674 insertions)
 - remote: https://github.com/zeus721-zslab/zslab-shop.git ✓
 
+## 완료된 작업 (Nginx 마스터 게이트웨이)
+
+### STEP 45: Nginx 마스터 리버스프록시 구성
+
+**아키텍처:**
+```
+인터넷 (80/443)
+└── gateway_nginx (Nginx 1.27, /home/gateway/)
+    ├── zslab.duckdns.org      → portfolio_app:80 (HTTP, 내부)
+    ├── zslab-shop.duckdns.org → zslab_caddy:8080 (HTTP, 내부)
+    └── zslab-stg.duckdns.org  → zslab_caddy:8080 (HTTP, 내부)
+```
+
+**주요 변경:**
+- `/home/gateway/` 생성 (docker alpine를 통해 root 소유)
+  - `docker-compose.yml`: nginx:1.27-alpine, gateway_net 생성
+  - `nginx/nginx.conf`: TLS 종료, resolver 127.0.0.11, proxy_pass 변수
+  - `certs/`: 기존 Caddy 인증서 재활용 (유효 2026-07-19)
+- `portfolio_app`: 포트 80/443 제거, `SERVER_NAME: http://:80`, gateway_net 연결
+  - `docker run` 직접 재생성 (docker compose .env 권한 문제 우회)
+- `zslab_caddy`: portfolio_portfolio_net 제거, gateway_net 연결
+- `zslab docker-compose.yml`: portfolio_portfolio_net → gateway_net 으로 교체
+- `shop.caddyfile`: 내용 비움 (Nginx가 라우팅 담당)
+
+**검증 결과:**
+- HTTP → HTTPS 301 리다이렉트 ✓
+- https://zslab-shop.duckdns.org → 200 OK ✓
+- https://zslab-shop.duckdns.org/api/health → {"status":"ok"} ✓
+- https://zslab.duckdns.org → 200 OK ✓
+- portfolio_app 80/443 외부 바인딩 없음 ✓
+- gateway_nginx 80/443 점유 ✓
+
+**인증서 갱신 주의:**
+- 현재 인증서: /home/gateway/certs/ (Caddy에서 추출, 유효 2026-07-19)
+- 갱신 방법: certbot 또는 Caddy를 이용해 재발급 후 /home/gateway/certs/ 업데이트 필요
+
 ## 다음 작업
-- GitHub PAT 또는 SSH 키 설정 후 `git push origin main`
+- 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
 - 소셜 로그인 (Google/Kakao) 실제 연동
 
