@@ -406,6 +406,33 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - 주문 상세 상태 변경 차단 메시지 ✓
 - "데모로 체험하기" 버튼 렌더링 ✓
 
+## 완료된 작업 (프론트엔드 애니메이션)
+
+### STEP 48: Framer Motion 애니메이션 적용
+
+**설치:** `framer-motion` npm 패키지
+
+**공통 컴포넌트 (`src/components/motion/`):**
+- `FadeIn.tsx` — 마운트 시 opacity + y 페이드인 (delay 지원)
+- `ScrollReveal.tsx` — 스크롤 진입 시 페이드인 (useInView)
+- `StaggerList.tsx` — 자식 순차 등장 (stagger, inView 연동)
+- `PageTransition.tsx` — 페이지 전환 fade+y 효과
+
+**적용 내역:**
+- `layout.tsx` — PageTransition으로 모든 페이지 진입 애니메이션
+- `Header.tsx` — 스크롤 시 그림자 전환, 검색 오버레이 AnimatePresence 슬라이드
+- `page.tsx` (홈) — 히어로 텍스트 순차 FadeIn, 카테고리/에디토리얼/신상품/인기 StaggerList/ScrollReveal
+- `ProductCard.tsx` — whileHover y:-2, 이미지 scale(1.05), 정보 슬라이드업, `'use client'` 전환, ProductCardSkeleton 추가
+- `AddToCartButton.tsx` — 수량 숫자 bounce, 버튼 whileHover/whileTap, 성공 플로팅 뱃지 AnimatePresence
+- `products/page.tsx` — StaggerList 그리드
+- `category/[slug]/page.tsx` — StaggerList 그리드
+- `cart/page.tsx` — AnimatePresence 아이템 슬라이드 in/out, skeleton-shimmer 로딩
+- `globals.css` — skeleton-shimmer keyframe 추가
+
+**디자인 원칙:** duration 0.3~0.5s, easeOut, subtle 효과
+
+**검증:** 빌드 성공 ✓ / 전 페이지 200 ✓
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY

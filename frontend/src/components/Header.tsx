@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@/store/auth'
+import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -22,20 +23,26 @@ export default function Header() {
   const pathname = usePathname()
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [scrolled, setScrolled] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (searchOpen) searchRef.current?.focus()
   }, [searchOpen])
 
-  // 페이지 이동 시 검색창 닫기
   useEffect(() => {
     setSearchOpen(false)
   }, [pathname])
 
+  // 스크롤 그림자
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   function handleLogout() {
     if (token) {
-      // fire-and-forget
       fetch(
         `${process.env.NEXT_PUBLIC_API_URL ?? 'https://zslab-shop.duckdns.org/api'}/auth/logout`,
         { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
@@ -55,38 +62,49 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-white">
-      {/* ── 검색 오버레이 ────────────────────────────────── */}
-      {searchOpen && (
-        <div className="absolute inset-0 z-10 bg-white flex items-center px-4 h-full border-b border-gray-100">
-          <form onSubmit={handleSearch} className="flex-1 flex items-center gap-3 max-w-xl mx-auto">
-            <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-            </svg>
-            <input
-              ref={searchRef}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="브랜드, 상품, 카테고리 검색"
-              className="flex-1 text-base outline-none placeholder:text-gray-300"
-            />
-            <button
-              type="button"
-              onClick={() => { setSearchOpen(false); setQuery('') }}
-              className="p-1 text-gray-400 hover:text-gray-900"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18 18 6M6 6l12 12" />
+    <header
+      className="sticky top-0 z-50 bg-white transition-shadow duration-300"
+      style={{ boxShadow: scrolled ? '0 2px 16px 0 rgba(0,0,0,0.07)' : 'none' }}
+    >
+      {/* ── 검색 오버레이 (AnimatePresence) ─────────────────── */}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            key="search-overlay"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="absolute inset-0 z-10 bg-white flex items-center px-4 h-full border-b border-gray-100"
+          >
+            <form onSubmit={handleSearch} className="flex-1 flex items-center gap-3 max-w-xl mx-auto">
+              <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
               </svg>
-            </button>
-          </form>
-        </div>
-      )}
+              <input
+                ref={searchRef}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="브랜드, 상품, 카테고리 검색"
+                className="flex-1 text-base outline-none placeholder:text-gray-300"
+              />
+              <button
+                type="button"
+                onClick={() => { setSearchOpen(false); setQuery('') }}
+                className="p-1 text-gray-400 hover:text-gray-900"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── 메인 헤더 ────────────────────────────────────── */}
       <div className="border-b border-gray-100">
         <div className="mx-auto max-w-screen-xl px-4 h-14 flex items-center gap-6">
-          {/* 로고 */}
           <Link
             href="/"
             className="text-[22px] font-bold tracking-[-0.04em] text-[#111] flex-shrink-0"
@@ -94,7 +112,6 @@ export default function Header() {
             zslab
           </Link>
 
-          {/* 검색바 — md 이상 */}
           <form
             onSubmit={handleSearch}
             className="hidden md:flex items-center gap-2 flex-1 max-w-xs lg:max-w-sm"
@@ -113,9 +130,7 @@ export default function Header() {
             </div>
           </form>
 
-          {/* 우측 액션 */}
           <div className="ml-auto flex items-center gap-3 text-sm">
-            {/* 검색 아이콘 — 모바일 */}
             <button
               onClick={() => setSearchOpen(true)}
               className="md:hidden p-1 text-gray-600 hover:text-gray-900"
@@ -152,7 +167,6 @@ export default function Header() {
               </>
             )}
 
-            {/* 장바구니 */}
             <Link
               href="/cart"
               className="p-1 text-gray-600 hover:text-gray-900 transition-colors"

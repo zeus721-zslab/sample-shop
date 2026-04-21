@@ -1,5 +1,6 @@
 import AuthProvider from '@/components/AuthProvider'
 import Header from '@/components/Header'
+import PageTransition from '@/components/motion/PageTransition'
 import type { Metadata } from 'next'
 import { Inter, Noto_Sans_KR } from 'next/font/google'
 import Link from 'next/link'
@@ -57,7 +58,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col bg-white text-[#111]">
         <AuthProvider>
           <Header />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1">
+            <PageTransition>{children}</PageTransition>
+          </main>
 
           {/* ── Footer ───────────────────────────────────── */}
           <footer className="border-t border-gray-100 mt-20">

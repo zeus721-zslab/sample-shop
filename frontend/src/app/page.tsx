@@ -1,4 +1,7 @@
 import ProductCard from '@/components/ProductCard'
+import FadeIn from '@/components/motion/FadeIn'
+import ScrollReveal from '@/components/motion/ScrollReveal'
+import StaggerList from '@/components/motion/StaggerList'
 import { productApi } from '@/lib/api'
 import { formatPrice } from '@/lib/format'
 import type { Product } from '@/types'
@@ -22,33 +25,41 @@ function HeroBanner() {
     <section className="relative bg-[#0f0f0f] text-white overflow-hidden">
       <div className="mx-auto max-w-screen-xl px-4 py-28 md:py-40 lg:py-52">
         <div className="max-w-3xl">
-          <p className="text-[11px] tracking-[0.35em] text-gray-500 uppercase mb-6">
-            2026 Spring / Summer
-          </p>
-          <h1 className="text-[clamp(2.8rem,8vw,6rem)] font-bold leading-[1.05] tracking-[-0.03em] editorial-heading">
-            좋아하는 것들로
-            <br />
-            <span className="text-gray-500">가득한 하루.</span>
-          </h1>
-          <p className="mt-8 text-[15px] text-gray-400 max-w-sm leading-relaxed">
-            취향을 존중하는 큐레이션. 패션부터 라이프스타일까지,
-            <br />
-            zslab이 엄선한 것들을 만나보세요.
-          </p>
-          <div className="mt-10 flex items-center gap-8">
-            <Link
-              href="/products?sort=latest"
-              className="inline-flex items-center gap-2 text-white text-sm font-medium border-b border-white pb-0.5 hover:text-gray-300 hover:border-gray-300 transition-colors"
-            >
-              신상품 보기
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-              </svg>
-            </Link>
-            <Link href="/products" className="text-sm text-gray-500 hover:text-white transition-colors">
-              전체 상품
-            </Link>
-          </div>
+          <FadeIn delay={0.1} y={10}>
+            <p className="text-[11px] tracking-[0.35em] text-gray-500 uppercase mb-6">
+              2026 Spring / Summer
+            </p>
+          </FadeIn>
+          <FadeIn delay={0.22} y={20}>
+            <h1 className="text-[clamp(2.8rem,8vw,6rem)] font-bold leading-[1.05] tracking-[-0.03em] editorial-heading">
+              좋아하는 것들로
+              <br />
+              <span className="text-gray-500">가득한 하루.</span>
+            </h1>
+          </FadeIn>
+          <FadeIn delay={0.38} y={16}>
+            <p className="mt-8 text-[15px] text-gray-400 max-w-sm leading-relaxed">
+              취향을 존중하는 큐레이션. 패션부터 라이프스타일까지,
+              <br />
+              zslab이 엄선한 것들을 만나보세요.
+            </p>
+          </FadeIn>
+          <FadeIn delay={0.5} y={12}>
+            <div className="mt-10 flex items-center gap-8">
+              <Link
+                href="/products?sort=latest"
+                className="inline-flex items-center gap-2 text-white text-sm font-medium border-b border-white pb-0.5 hover:text-gray-300 hover:border-gray-300 transition-colors"
+              >
+                신상품 보기
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                </svg>
+              </Link>
+              <Link href="/products" className="text-sm text-gray-500 hover:text-white transition-colors">
+                전체 상품
+              </Link>
+            </div>
+          </FadeIn>
         </div>
       </div>
 
@@ -77,7 +88,12 @@ function CategoryQuickMenu() {
   return (
     <section className="border-b border-gray-100">
       <div className="mx-auto max-w-screen-xl px-4">
-        <div className="flex overflow-x-auto scrollbar-none">
+        <StaggerList
+          className="flex overflow-x-auto scrollbar-none"
+          stagger={0.06}
+          y={12}
+          duration={0.35}
+        >
           {CATEGORIES.map((cat) => (
             <Link
               key={cat.slug}
@@ -92,7 +108,7 @@ function CategoryQuickMenu() {
               </span>
             </Link>
           ))}
-        </div>
+        </StaggerList>
       </div>
     </section>
   )
@@ -109,47 +125,51 @@ async function EditorialFeed() {
   return (
     <section className="mx-auto max-w-screen-xl px-4 py-16">
       {/* 섹션 헤더 */}
-      <div className="flex items-end justify-between mb-8">
-        <div>
-          <p className="text-[11px] text-gray-400 tracking-[0.2em] uppercase mb-1">Editor's Pick</p>
-          <h2 className="text-2xl font-bold tracking-tight">지금 가장 주목받는</h2>
+      <ScrollReveal y={16} duration={0.4}>
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <p className="text-[11px] text-gray-400 tracking-[0.2em] uppercase mb-1">Editor&apos;s Pick</p>
+            <h2 className="text-2xl font-bold tracking-tight">지금 가장 주목받는</h2>
+          </div>
+          <Link
+            href="/products?sort=popular"
+            className="text-[12px] text-gray-400 hover:text-[#111] transition-colors link-underline"
+          >
+            전체보기
+          </Link>
         </div>
-        <Link
-          href="/products?sort=popular"
-          className="text-[12px] text-gray-400 hover:text-[#111] transition-colors link-underline"
-        >
-          전체보기
-        </Link>
-      </div>
+      </ScrollReveal>
 
       {/* 메인 그리드 — 잡지풍 비대칭 */}
       <div className="grid grid-cols-12 gap-3 md:gap-4">
-        {/* 왼쪽 대형 */}
         {p1 && (
-          <div className="col-span-12 md:col-span-7 row-span-2">
+          <ScrollReveal className="col-span-12 md:col-span-7 row-span-2" delay={0.05}>
             <EditorialCard product={p1} large />
-          </div>
+          </ScrollReveal>
         )}
-        {/* 오른쪽 소형 2개 */}
         {p2 && (
-          <div className="col-span-6 md:col-span-5">
+          <ScrollReveal className="col-span-6 md:col-span-5" delay={0.15}>
             <EditorialCard product={p2} />
-          </div>
+          </ScrollReveal>
         )}
         {p3 && (
-          <div className="col-span-6 md:col-span-5">
+          <ScrollReveal className="col-span-6 md:col-span-5" delay={0.25}>
             <EditorialCard product={p3} />
-          </div>
+          </ScrollReveal>
         )}
       </div>
 
       {/* 보조 그리드 — 3열 */}
       {products.length >= 5 && (
-        <div className="grid grid-cols-3 gap-3 md:gap-4 mt-3 md:mt-4">
+        <StaggerList
+          className="grid grid-cols-3 gap-3 md:gap-4 mt-3 md:mt-4"
+          stagger={0.1}
+          y={20}
+        >
           {[p4, p5, p6].filter(Boolean).map((p) => (
             <EditorialCard key={p!.id} product={p!} />
           ))}
-        </div>
+        </StaggerList>
       )}
     </section>
   )
@@ -165,7 +185,7 @@ function EditorialCard({ product, large = false }: { product: Product; large?: b
           src={product.images[0] ?? `https://picsum.photos/seed/${product.slug}/800/1000`}
           alt={product.name}
           fill
-          className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+          className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
           sizes={large ? '(max-width: 768px) 100vw, 58vw' : '(max-width: 640px) 50vw, 25vw'}
         />
 
@@ -173,7 +193,7 @@ function EditorialCard({ product, large = false }: { product: Product; large?: b
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80" />
 
         {/* 텍스트 오버레이 */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
+        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
           {product.category && (
             <p className="text-[10px] text-white/60 tracking-[0.2em] uppercase mb-1">
               {product.category.name}
@@ -208,23 +228,25 @@ function EditorialCard({ product, large = false }: { product: Product; large?: b
 function EditorialBand() {
   return (
     <section className="bg-[#f7f7f5] py-16 px-4">
-      <div className="mx-auto max-w-screen-xl">
-        <div className="grid md:grid-cols-2 gap-8 items-center">
-          <div>
-            <p className="text-[11px] tracking-[0.25em] text-gray-400 uppercase mb-4">Our Curation</p>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight editorial-heading">
-              모든 취향을<br />
-              존중합니다.
-            </h2>
+      <ScrollReveal y={20} duration={0.5}>
+        <div className="mx-auto max-w-screen-xl">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <p className="text-[11px] tracking-[0.25em] text-gray-400 uppercase mb-4">Our Curation</p>
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight editorial-heading">
+                모든 취향을<br />
+                존중합니다.
+              </h2>
+            </div>
+            <p className="text-[15px] text-gray-500 leading-relaxed">
+              zslab은 단순한 쇼핑몰이 아닙니다.<br />
+              패션, 뷰티, 라이프스타일의 경계를 넘나들며
+              당신의 일상에 영감을 더하는 편집숍입니다.
+              지금 이 계절, 가장 필요한 것들을 큐레이션했습니다.
+            </p>
           </div>
-          <p className="text-[15px] text-gray-500 leading-relaxed">
-            zslab은 단순한 쇼핑몰이 아닙니다.<br />
-            패션, 뷰티, 라이프스타일의 경계를 넘나들며
-            당신의 일상에 영감을 더하는 편집숍입니다.
-            지금 이 계절, 가장 필요한 것들을 큐레이션했습니다.
-          </p>
         </div>
-      </div>
+      </ScrollReveal>
     </section>
   )
 }
@@ -237,7 +259,7 @@ async function NewArrivals() {
 
   return (
     <section className="py-16">
-      <div className="mx-auto max-w-screen-xl px-4">
+      <ScrollReveal className="mx-auto max-w-screen-xl px-4" y={16} duration={0.4}>
         <div className="flex items-end justify-between mb-8">
           <div>
             <p className="text-[11px] text-gray-400 tracking-[0.2em] uppercase mb-1">New Arrivals</p>
@@ -250,17 +272,22 @@ async function NewArrivals() {
             더보기
           </Link>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* 가로 스크롤 */}
       <div className="px-4 lg:px-[calc((100vw-1280px)/2+1rem)]">
-        <div className="flex gap-3 overflow-x-auto scrollbar-none pb-2">
+        <StaggerList
+          className="flex gap-3 overflow-x-auto scrollbar-none pb-2"
+          stagger={0.06}
+          y={16}
+          duration={0.4}
+        >
           {products.map((product, i) => (
             <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[200px] lg:w-[220px]">
               <ProductCard product={product} ratio="portrait" priority={i < 3} />
             </div>
           ))}
-        </div>
+        </StaggerList>
       </div>
     </section>
   )
@@ -275,24 +302,31 @@ async function PopularProducts() {
   return (
     <section className="py-16 bg-white">
       <div className="mx-auto max-w-screen-xl px-4">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <p className="text-[11px] text-gray-400 tracking-[0.2em] uppercase mb-1">Best Sellers</p>
-            <h2 className="text-2xl font-bold tracking-tight">인기 상품</h2>
+        <ScrollReveal y={16} duration={0.4}>
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <p className="text-[11px] text-gray-400 tracking-[0.2em] uppercase mb-1">Best Sellers</p>
+              <h2 className="text-2xl font-bold tracking-tight">인기 상품</h2>
+            </div>
+            <Link
+              href="/products?sort=popular"
+              className="text-[12px] text-gray-400 hover:text-[#111] transition-colors link-underline"
+            >
+              더보기
+            </Link>
           </div>
-          <Link
-            href="/products?sort=popular"
-            className="text-[12px] text-gray-400 hover:text-[#111] transition-colors link-underline"
-          >
-            더보기
-          </Link>
-        </div>
+        </ScrollReveal>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10">
+        <StaggerList
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10"
+          stagger={0.07}
+          y={20}
+          duration={0.4}
+        >
           {products.map((product, i) => (
             <ProductCard key={product.id} product={product} ratio="portrait" priority={i < 4} />
           ))}
-        </div>
+        </StaggerList>
       </div>
     </section>
   )

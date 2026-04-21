@@ -4,6 +4,7 @@ import { cartApi, ApiError } from '@/lib/api'
 import { formatPrice } from '@/lib/format'
 import { useAuth } from '@/store/auth'
 import type { CartData } from '@/types'
+import { AnimatePresence, motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -76,11 +77,11 @@ export default function CartPage() {
       <div className="mx-auto max-w-screen-lg px-4 py-10">
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="flex gap-4 animate-pulse">
-              <div className="w-24 h-24 bg-gray-100 rounded" />
+            <div key={i} className="flex gap-4">
+              <div className="w-24 h-24 bg-gray-100 rounded skeleton-shimmer" />
               <div className="flex-1 space-y-2 py-1">
-                <div className="h-4 bg-gray-100 rounded w-2/3" />
-                <div className="h-4 bg-gray-100 rounded w-1/3" />
+                <div className="h-4 bg-gray-100 rounded w-2/3 skeleton-shimmer" />
+                <div className="h-4 bg-gray-100 rounded w-1/3 skeleton-shimmer" />
               </div>
             </div>
           ))}
@@ -119,8 +120,17 @@ export default function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* 상품 목록 */}
         <div className="lg:col-span-2 space-y-4">
+          <AnimatePresence initial={false}>
           {cart.items.map((item) => (
-            <div key={item.cart_item_id} className="flex gap-4 py-4 border-b border-gray-100">
+            <motion.div
+              key={item.cart_item_id}
+              layout
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.28, ease: 'easeOut' }}
+              className="flex gap-4 py-4 border-b border-gray-100"
+            >
               {/* 이미지 */}
               <Link href={`/products/${item.slug}`} className="flex-shrink-0">
                 <div className="relative w-24 h-24 bg-gray-50 rounded overflow-hidden">
@@ -179,8 +189,9 @@ export default function CartPage() {
               <div className="text-right flex-shrink-0">
                 <p className="font-bold">{formatPrice(item.line_total)}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
+          </AnimatePresence>
         </div>
 
         {/* 결제 요약 */}
