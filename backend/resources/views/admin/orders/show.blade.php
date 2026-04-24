@@ -71,10 +71,10 @@
       <div class="card-body">
         @php $addr = is_array($order->shipping_address) ? $order->shipping_address : json_decode($order->shipping_address, true); @endphp
         <dl class="row mb-0">
-          <dt class="col-4 text-muted">수취인</dt><dd class="col-8">{{ $addr['name'] ?? '-' }}</dd>
+          <dt class="col-4 text-muted">수취인</dt><dd class="col-8">{{ $addr['recipient'] ?? '-' }}</dd>
           <dt class="col-4 text-muted">연락처</dt><dd class="col-8">{{ $addr['phone'] ?? '-' }}</dd>
-          <dt class="col-4 text-muted">우편번호</dt><dd class="col-8">{{ $addr['zip'] ?? '-' }}</dd>
-          <dt class="col-4 text-muted">주소</dt><dd class="col-8">{{ ($addr['address1'] ?? '') . ' ' . ($addr['address2'] ?? '') }}</dd>
+          <dt class="col-4 text-muted">우편번호</dt><dd class="col-8">{{ $addr['postal_code'] ?? '-' }}</dd>
+          <dt class="col-4 text-muted">주소</dt><dd class="col-8">{{ $addr['address'] ?? '-' }}{{ isset($addr['detail']) ? ' ' . $addr['detail'] : '' }}</dd>
         </dl>
       </div>
     </div>
