@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CouponController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\MyController;
 use App\Http\Controllers\NoticeController;
@@ -82,6 +83,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Reviews (인증 필요)
     Route::post('/products/{productId}/reviews',    [ReviewController::class, 'store']);
     Route::delete('/reviews/{id}',                  [ReviewController::class, 'destroy']);
+
+    // Coupons
+    Route::post('/coupons/validate', [CouponController::class, 'validate']);
 
     // My
     Route::prefix('my')->group(function () {

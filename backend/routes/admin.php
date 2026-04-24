@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\InquiryController;
@@ -63,6 +64,14 @@ Route::prefix('zslab-manage')->name('admin.')->group(function () {
         Route::get('/faqs/{faq}/edit',   [FaqController::class, 'edit'])->name('faqs.edit');
         Route::put('/faqs/{faq}',        [FaqController::class, 'update'])->name('faqs.update');
         Route::delete('/faqs/{faq}',     [FaqController::class, 'destroy'])->name('faqs.destroy');
+
+        // 쿠폰 관리
+        Route::get('/coupons',              [CouponController::class, 'index'])->name('coupons.index');
+        Route::get('/coupons/create',       [CouponController::class, 'create'])->name('coupons.create');
+        Route::post('/coupons',             [CouponController::class, 'store'])->name('coupons.store');
+        Route::get('/coupons/{coupon}/edit', [CouponController::class, 'edit'])->name('coupons.edit');
+        Route::put('/coupons/{coupon}',     [CouponController::class, 'update'])->name('coupons.update');
+        Route::delete('/coupons/{coupon}',  [CouponController::class, 'destroy'])->name('coupons.destroy');
 
         // 1:1 문의 관리
         Route::get('/inquiries', [InquiryController::class, 'index'])->name('inquiries.index');

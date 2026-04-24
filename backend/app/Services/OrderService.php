@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Contracts\PaymentGatewayInterface;
+use App\Models\Coupon;
+use App\Models\CouponUsage;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -44,17 +46,35 @@ class OrderService
         }
 
         // 2. 금액 계산
-        $totalAmount    = array_sum(array_map(fn ($i) => $i['effective_price'] * $i['quantity'], $items));
-        $discountAmount = 0; // TODO: 쿠폰 처리
-        $finalAmount    = $totalAmount - $discountAmount;
+        $totalAmount = array_sum(array_map(fn ($i) => $i['effective_price'] * $i['quantity'], $items));
 
-        // 3. 재고 차감 (낙관적 락 + 재시도)
+        // 3. 쿠폰 처리
+        $coupon         = null;
+        $discountAmount = 0;
+
+        if ($couponCode !== '') {
+            [$coupon, $discountAmount] = $this->applyCoupon($couponCode, $totalAmount, $userId);
+        }
+
+        $finalAmount = max(0, $totalAmount - $discountAmount);
+
+        // 4. 재고 차감 (낙관적 락 + 재시도)
         $order = $this->createWithOptimisticLock(
             $userId, $items, $shippingAddress,
             $totalAmount, $discountAmount, $finalAmount, $couponCode,
         );
 
-        // 4. 결제 준비
+        // 5. 쿠폰 사용 이력 저장
+        if ($coupon !== null) {
+            CouponUsage::create([
+                'coupon_id' => $coupon->id,
+                'user_id'   => $userId,
+                'order_id'  => $order->id,
+            ]);
+            $coupon->increment('used_count');
+        }
+
+        // 6. 결제 준비
         $user        = $order->user;
         $paymentData = $this->payment->prepare([
             'amount'       => $finalAmount,
@@ -65,7 +85,7 @@ class OrderService
 
         $order->update(['payment_id' => $paymentData['payment_id']]);
 
-        // 4b. Mock 결제 (next_action=none): 즉시 paid 처리
+        // 6b. Mock 결제 (next_action=none): 즉시 paid 처리
         if (($paymentData['next_action'] ?? '') === 'none') {
             $confirmResult = $this->payment->confirm($paymentData['payment_id'], $finalAmount);
             if ($confirmResult['success']) {
@@ -78,13 +98,59 @@ class OrderService
             }
         }
 
-        // 5. 장바구니에서 주문 아이템 제거
+        // 7. 장바구니에서 주문 아이템 제거
         $this->cart->removeMany($userId, array_column($items, 'cart_item_id'));
 
         return [
             'order'   => $order->fresh('items'),
             'payment' => $paymentData,
         ];
+    }
+
+    /**
+     * 쿠폰 유효성 검증 및 할인 금액 계산.
+     * 성공 시 [Coupon, discountAmount] 반환.
+     * 실패 시 RuntimeException throw.
+     */
+    public function applyCoupon(string $code, int $totalAmount, int $userId): array
+    {
+        $coupon = Coupon::where('code', $code)->first();
+
+        if (! $coupon) {
+            throw new \RuntimeException('존재하지 않는 쿠폰 코드입니다.');
+        }
+
+        if (! $coupon->isValid()) {
+            throw new \RuntimeException('사용할 수 없는 쿠폰입니다. (만료 또는 소진)');
+        }
+
+        if ($totalAmount < $coupon->min_order_amount) {
+            throw new \RuntimeException(
+                number_format($coupon->min_order_amount) . '원 이상 주문 시 사용 가능한 쿠폰입니다.'
+            );
+        }
+
+        // 동일 쿠폰 중복 사용 방지
+        $alreadyUsed = CouponUsage::where('coupon_id', $coupon->id)
+            ->where('user_id', $userId)
+            ->exists();
+
+        if ($alreadyUsed) {
+            throw new \RuntimeException('이미 사용한 쿠폰입니다.');
+        }
+
+        // 할인 금액 계산
+        if ($coupon->type === 'fixed') {
+            $discount = (int) $coupon->value;
+        } else {
+            // percent
+            $discount = (int) round($totalAmount * $coupon->value / 100);
+            if ($coupon->max_discount_amount) {
+                $discount = min($discount, (int) $coupon->max_discount_amount);
+            }
+        }
+
+        return [$coupon, $discount];
     }
 
     /**
@@ -181,11 +247,9 @@ class OrderService
 
             } catch (\RuntimeException $e) {
                 if ($e->getMessage() !== '__version_conflict__') {
-                    // 재고 부족 등 실제 비즈니스 오류 — 재시도 없이 즉시 throw
                     throw $e;
                 }
                 $lastError = $e;
-                // 버전 충돌이면 잠시 후 재시도
                 usleep(50_000 * $attempt); // 50ms, 100ms, 150ms
             }
         }
@@ -222,11 +286,10 @@ class OrderService
      * 배송 상태 업데이트
      *
      * 허용 전환: paid → shipping → delivered
-     *           paid/pending → cancelled (재고 복원)
+     *           paid/pending → cancelled (재고 복원 + 쿠폰 복원)
      */
     public function updateStatus(int $orderId, int $userId, string $newStatus): Order
     {
-        // 상태 전환 허용 맵
         $allowed = [
             'paid'     => ['shipping', 'cancelled'],
             'pending'  => ['cancelled'],
@@ -254,6 +317,15 @@ class OrderService
                     Product::where('id', $item->product_id)->increment('stock', $item->quantity);
                     Product::where('id', $item->product_id)->where('status', 'soldout')
                         ->update(['status' => 'active']);
+                }
+
+                // 쿠폰 복원 (사용 이력 삭제 + used_count 차감)
+                if ($order->coupon_code) {
+                    $usage = CouponUsage::where('order_id', $order->id)->first();
+                    if ($usage) {
+                        Coupon::where('id', $usage->coupon_id)->decrement('used_count');
+                        $usage->delete();
+                    }
                 }
             }
 

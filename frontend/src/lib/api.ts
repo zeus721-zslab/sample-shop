@@ -267,6 +267,25 @@ export const faqApi = {
   },
 }
 
+// ── Coupons ───────────────────────────────────────────────────────────────────
+
+export const couponApi = {
+  validate(token: string, code: string, orderAmount: number) {
+    return request<{
+      valid: boolean
+      coupon_name: string
+      type: 'fixed' | 'percent'
+      value: number
+      discount_amount: number
+      final_amount: number
+    }>('/coupons/validate', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ code, order_amount: orderAmount }),
+    })
+  },
+}
+
 // ── My ────────────────────────────────────────────────────────────────────────
 
 export const myApi = {

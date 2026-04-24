@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             NoticeSeeder::class,
             FaqSeeder::class,
+            CouponSeeder::class,
         ]);
     }
 }

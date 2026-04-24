@@ -636,13 +636,13 @@ curl https://api.zslab-shop.duckdns.org/api/health
 | 적립금 % 적립 | ❌ 미구현 | OrderService에 포인트 적립 처리 없음 |
 | 마이페이지 등급 UI | ❌ 미구현 | /my 페이지에 등급 표시 없음 |
 
-### 2. 쿠폰 발행/관리
+### 2. 쿠폰 발행/관리 (STEP 55에서 완성)
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | DB 쿠폰 스키마 | ✅ 구현됨 | coupons + coupon_usages 테이블 존재 (fixed/percent 타입) |
-| 쿠폰 적용/차감 API | ⚠️ 부분구현 | OrderService에 `$discountAmount = 0; // TODO: 쿠폰 처리` — 항상 0 |
-| 체크아웃 쿠폰 입력창 | ⚠️ 부분구현 | UI + API 파라미터 전달은 되나 실제 할인 계산 안됨 |
-| 관리자 쿠폰 관리 UI | ❌ 미구현 | admin 라우트/뷰/Controller 없음 |
+| 쿠폰 적용/차감 API | ✅ 구현됨 | OrderService.applyCoupon() 완성, 사용이력/used_count 처리 |
+| 체크아웃 쿠폰 입력창 | ✅ 구현됨 | validate API 호출, 할인 금액 표시, 최종금액 반영 |
+| 관리자 쿠폰 관리 UI | ✅ 구현됨 | /zslab-manage/coupons CRUD 완성 |
 
 ### 3. ELK 통계 대시보드
 | 항목 | 상태 | 비고 |
@@ -659,6 +659,51 @@ curl https://api.zslab-shop.duckdns.org/api/health
 | 셀러 라우트 활성화 | ❌ 미구현 | api.php에 `// Route::apiResource('/sellers', ...)` 주석 처리 |
 | 셀러 입점/승인 API | ❌ 미구현 | SellerController 없음 |
 | 셀러 패널 UI | ❌ 미구현 | /seller/* 페이지 없음 |
+
+## 완료된 작업 (쿠폰 기능 완성)
+
+### STEP 55: 쿠폰 기능 완성 (2026-04-25)
+
+**백엔드:**
+- `CouponUsage` 모델 신규 생성
+- `OrderService.php`: `applyCoupon()` 메서드 추가
+  - 쿠폰 코드 유효성 검증 (존재/만료/사용횟수/시작일)
+  - 동일 쿠폰 중복 사용 방지 (coupon_usages 조회)
+  - 최소 주문금액 체크
+  - 정액(fixed) / 정률(percent, max_discount_amount 상한) 할인 계산
+  - 주문 생성 후 coupon_usages 이력 저장 + used_count 증가
+- `OrderService.updateStatus()` 취소 시 쿠폰 복원
+  - coupon_usages 이력 삭제 + used_count 차감
+- `CouponController.php` 신규: `POST /api/coupons/validate`
+- `Admin\CouponController.php` 신규: CRUD (index/create/store/edit/update/destroy)
+- `routes/api.php`: POST /api/coupons/validate (auth:sanctum 필요)
+- `routes/admin.php`: /zslab-manage/coupons CRUD 6개 라우트
+
+**프론트엔드:**
+- `api.ts`: `couponApi.validate()` 추가
+- `checkout/page.tsx`: 쿠폰 적용 버튼 실제 동작 연결
+  - 적용 버튼 → validate API 호출 → 성공 시 녹색 배너 표시
+  - 할인 금액 표시, 총 결제금액에서 차감
+  - 실패 시 에러 메시지, 적용 취소 기능
+
+**관리자 패널:**
+- `admin/coupons/index.blade.php`: 목록 테이블 (코드/할인/유효기간/사용현황/상태)
+- `admin/coupons/create.blade.php` + `edit.blade.php`
+- `admin/coupons/_form.blade.php`: JS 연동 (정률↔정액 단위 자동 전환)
+- `layouts/app.blade.php`: 쿠폰 관리 사이드바 메뉴 추가
+
+**테스트 쿠폰 Seeder:**
+- WELCOME10: 신규가입 10% (최대 5,000원, 10,000원 이상)
+- SAVE5000: 5,000원 정액 할인 (30,000원 이상, 100회 한도)
+- SUMMER20: 여름 시즌 20% (최대 20,000원, 50,000원 이상, 50회)
+- VIP3000: VIP 전용 3,000원 (제한 없음)
+
+**검증:**
+- POST /api/coupons/validate WELCOME10(50000원) → `{"valid":true,"discount_amount":5000,"final_amount":45000}` ✓
+- SAVE5000 최소주문 미달 → `{"message":"30,000원 이상 주문 시 사용 가능한 쿠폰입니다."}` ✓
+- 존재하지 않는 코드 → `{"message":"존재하지 않는 쿠폰 코드입니다."}` ✓
+- /zslab-manage/coupons → HTTP 200 ✓
+- https://zslab-shop.duckdns.org/ → HTTP 200 ✓
 
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
