@@ -748,6 +748,64 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - StatsController 렌더링 테스트 ✓
 - https://zslab-shop.duckdns.org/ → HTTP 200 ✓
 
+## 완료된 작업 (멤버십 등급제 + 맞춤 상품 추천)
+
+### STEP 58: 멤버십 등급제 + 맞춤 상품 추천 (2026-04-25)
+
+**DB 마이그레이션 (4개):**
+- `2026_04_25_000010_add_membership_fields_to_users`: grade/points/gender/birth_year 추가
+- `2026_04_25_000011_create_point_histories_table`: 적립금 이력 테이블
+- `2026_04_25_000012_create_membership_configs_table`: 등급 기준/적립률 DB 관리 (newbie 0% / silver 1.5% / gold 2% / vip 3%)
+- `2026_04_25_000013_add_points_to_orders`: orders에 used_points/earned_points 컬럼
+
+**모델:**
+- `MembershipConfig`: 등급 설정 모델
+- `PointHistory`: 적립금 이력 모델
+- `User`: grade/points/gender/birth_year 필드 추가, pointHistories 관계 추가
+
+**서비스 (`MembershipService`):**
+- `recalculateGrade()`: 최근 12개월 delivered 주문액 기준, membership_configs 참조 자동 등급 산정
+- `earnPoints()`: delivered 전환 시 등급별 적립금 지급 + PointHistory 기록
+- `usePoints()`: 주문 생성 시 적립금 차감
+- `refundPoints()`: 주문 취소 시 적립금 환원
+
+**`OrderService` 업데이트:**
+- `create()`: `use_points` 파라미터 추가 → 쿠폰 차감 후 최종금액에서 적립금 추가 차감
+- `updateStatus('delivered')`: `earnPoints()` + `recalculateGrade()` 자동 트리거
+- `updateStatus('cancelled')`: `refundPoints()` 자동 트리거
+
+**신규 API:**
+- `GET /api/my/points`: 등급 정보 + 다음 등급까지 남은 금액 + 적립금 잔액 + 이력 50건
+- `GET /api/recommendations`: 로그인 시 개인화(카테고리+협업필터링+세그먼트), 비로그인 시 인기 상품
+- `POST /api/orders`: `use_points` 파라미터 추가
+- `POST /api/auth/register`: gender/birth_year 파라미터 추가 + welcome_coupon 반환
+
+**관리자 패널:**
+- `Admin\MembershipController`: 등급별 기준 금액/적립률 수정 (GET/PUT)
+- `Admin\MemberController`: `adjustPoints()` 수동 적립금 조정 (POST)
+- `/zslab-manage/membership`: 멤버십 설정 페이지 (4개 등급 카드 + 등급 흐름 다이어그램)
+- `/zslab-manage/members`: 등급/적립금 표시 + 수동 조정 모달
+- 사이드바: 커머스 관리 그룹에 멤버십 설정 추가
+
+**프론트엔드:**
+- `/register`: 성별/출생연도 선택 필드 추가, 웰컴 쿠폰(WELCOME10) 팝업 표시
+- `/my?tab=membership`: 등급 카드 (적립률/다음 등급 프로그레스바) + 적립금 이력 탭
+- `/checkout`: 적립금 사용 입력창 + 전액 사용 버튼 + 결제요약 적립금 차감 표시
+- 홈 페이지: `<RecommendationSection>` 추가 (로그인 시 "맞춤 추천", 비로그인 시 "지금 인기 있는 상품")
+
+**검증:**
+- `POST /api/auth/register` (gender/birth_year) → grade:newbie + welcome_coupon 반환 ✓
+- `GET /api/my/points` → grade_info + remaining_amount 정상 반환 ✓
+- `GET /api/recommendations` (로그인) → type:personalized, 12개 상품 ✓
+- `GET /api/recommendations` (비로그인) → type:popular, 12개 상품 ✓
+- `POST /api/orders` (use_points:0) → status:paid ✓
+- DB: membership_configs 4개 등급 seeder 완료 ✓
+- 프론트 빌드 성공 ✓ / https://zslab-shop.duckdns.org/ → HTTP 200 ✓
+
+**포트폴리오 하이라이트:**
+- 멤버십 등급제 (Newbie/Silver/Gold/VIP) — DB 기반 등급 기준/적립률 동적 관리
+- Elasticsearch 기반 구매 이력/협업 필터링/성별-나이 세그먼트 맞춤 상품 추천
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY

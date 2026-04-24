@@ -106,6 +106,15 @@
             </a>
           </li>
 
+          {{-- ── 커머스 관리 (멤버십) ─────────────────── --}}
+          <li class="nav-item">
+            <a href="{{ route('admin.membership.index') }}"
+               class="nav-link {{ request()->routeIs('admin.membership.*') ? 'active' : '' }}">
+              <i class="nav-icon bi bi-award"></i>
+              <p>멤버십 설정</p>
+            </a>
+          </li>
+
           {{-- ── 고객 관리 ────────────────────────────── --}}
           <li class="nav-header small text-uppercase text-muted px-3 py-2 mt-1" style="font-size:.65rem;letter-spacing:.08em;">고객 관리</li>
           <li class="nav-item">

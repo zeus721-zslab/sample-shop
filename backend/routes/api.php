@@ -8,7 +8,9 @@ use App\Http\Controllers\FaqController;
 use App\Http\Controllers\MyController;
 use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PointController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\WishlistController;
@@ -48,6 +50,11 @@ Route::get('/products/{productId}/reviews', [ReviewController::class, 'index']);
 // ── 검색 ──────────────────────────────────────────────────────────────────────
 
 Route::get('/search', [SearchController::class, 'index']);
+
+// ── 추천 (비로그인: 인기 상품, 로그인: 개인화) ───────────────────────────────
+// 토큰 있으면 개인화, 없으면 인기 상품 — 컨트롤러 내부에서 auth()->user() 처리
+
+Route::get('/recommendations', [RecommendationController::class, 'index']);
 
 // ── 공지사항 / FAQ ────────────────────────────────────────────────────────────
 
@@ -94,6 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders',    [MyController::class, 'orders']);
         Route::get('/reviews',   [MyController::class, 'reviews']);
         Route::get('/wishlist',  [MyController::class, 'wishlist']);
+        Route::get('/points',    [PointController::class, 'index']);
     });
 });
 

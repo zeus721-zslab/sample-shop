@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Coupon;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
@@ -16,26 +17,37 @@ class AuthController extends Controller
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name'     => 'required|string|max:100',
-            'email'    => 'required|email|max:255|unique:users,email',
-            'password' => ['required', 'confirmed', Password::min(8)],
-            'phone'    => 'sometimes|string|max:20',
+            'name'       => 'required|string|max:100',
+            'email'      => 'required|email|max:255|unique:users,email',
+            'password'   => ['required', 'confirmed', Password::min(8)],
+            'phone'      => 'sometimes|string|max:20',
+            'gender'     => 'sometimes|nullable|in:male,female,other',
+            'birth_year' => 'sometimes|nullable|integer|min:1900|max:' . now()->year,
         ]);
 
         $user = User::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'phone'    => $validated['phone'] ?? null,
+            'name'       => $validated['name'],
+            'email'      => $validated['email'],
+            'password'   => Hash::make($validated['password']),
+            'phone'      => $validated['phone'] ?? null,
+            'grade'      => 'newbie',
+            'gender'     => $validated['gender'] ?? null,
+            'birth_year' => $validated['birth_year'] ?? null,
         ]);
 
         event(new Registered($user));
 
         $token = $user->createToken('auth')->plainTextToken;
 
+        // Newbie 웰컴 쿠폰 정보 반환
+        $welcomeCoupon = Coupon::where('code', 'WELCOME10')
+            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+            ->first(['code', 'name', 'value', 'type']);
+
         return response()->json([
-            'user'  => $user,
-            'token' => $token,
+            'user'           => $user,
+            'token'          => $token,
+            'welcome_coupon' => $welcomeCoupon,
         ], 201);
     }
 

@@ -1,4 +1,4 @@
-import type { CartData, Category, Faq, Notice, Order, PaginatedResponse, Product, Review, User, WishlistItem } from '@/types'
+import type { CartData, Category, Faq, GradeInfo, Notice, Order, PaginatedResponse, PointHistory, Product, Review, User, WishlistItem } from '@/types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://zslab-shop.duckdns.org/api'
 
@@ -37,8 +37,8 @@ export class ApiError extends Error {
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 export const authApi = {
-  register(data: { name: string; email: string; password: string; password_confirmation: string }) {
-    return request<{ user: User; token: string }>('/auth/register', {
+  register(data: { name: string; email: string; password: string; password_confirmation: string; gender?: string; birth_year?: number }) {
+    return request<{ user: User; token: string; welcome_coupon?: { code: string; name: string; value: number; type: string } }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     })
@@ -166,6 +166,7 @@ export const orderApi = {
       cart_item_ids?: string[]
       shipping_address: Order['shipping_address']
       coupon_code?: string
+      use_points?: number
     },
   ) {
     return request<{ order: Order; payment: Record<string, unknown> }>('/orders', {
@@ -318,6 +319,22 @@ export const myApi = {
   wishlist(token: string, page = 1) {
     return request<PaginatedResponse<WishlistItem>>(`/my/wishlist?page=${page}`, {
       headers: { Authorization: `Bearer ${token}` },
+    })
+  },
+
+  points(token: string) {
+    return request<{ grade_info: GradeInfo; histories: PointHistory[] }>('/my/points', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+  },
+}
+
+// ── Recommendations ───────────────────────────────────────────────────────────
+
+export const recommendApi = {
+  get(token?: string | null) {
+    return request<{ products: Product[]; type: 'personalized' | 'popular' }>('/recommendations', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
   },
 }

@@ -55,7 +55,30 @@ export interface User {
   name: string
   email: string
   phone: string | null
+  grade?: 'newbie' | 'silver' | 'gold' | 'vip'
+  points?: number
+  gender?: 'male' | 'female' | 'other' | null
+  birth_year?: number | null
   created_at: string
+}
+
+export interface PointHistory {
+  id: number
+  type: 'earn' | 'use'
+  amount: number
+  description: string
+  order_id: number | null
+  created_at: string
+}
+
+export interface GradeInfo {
+  current_grade: 'newbie' | 'silver' | 'gold' | 'vip'
+  points: number
+  current_point_rate: number
+  next_grade: string | null
+  next_grade_amount?: number
+  purchased_amount?: number
+  remaining_amount?: number
 }
 
 export interface OrderItem {

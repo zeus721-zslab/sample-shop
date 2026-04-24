@@ -12,24 +12,21 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'role', 'is_active', 'social_provider', 'social_id', 'avatar'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'role', 'is_active', 'social_provider', 'social_id', 'avatar', 'grade', 'points', 'gender', 'birth_year'])]
 #[Hidden(['password', 'remember_token', 'social_id'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
             'is_active'         => 'boolean',
+            'points'            => 'integer',
+            'birth_year'        => 'integer',
         ];
     }
 
@@ -46,5 +43,10 @@ class User extends Authenticatable
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
+    }
+
+    public function pointHistories(): HasMany
+    {
+        return $this->hasMany(PointHistory::class);
     }
 }

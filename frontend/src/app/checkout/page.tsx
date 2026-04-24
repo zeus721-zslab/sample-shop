@@ -1,6 +1,6 @@
 'use client'
 
-import { cartApi, couponApi, orderApi, ApiError } from '@/lib/api'
+import { cartApi, couponApi, myApi, orderApi, ApiError } from '@/lib/api'
 import { formatPrice } from '@/lib/format'
 import { useAuth } from '@/store/auth'
 import type { CartData } from '@/types'
@@ -43,6 +43,8 @@ export default function CheckoutPage() {
     address: '',
     detail: '',
   })
+  const [availablePoints, setAvailablePoints] = useState(0)
+  const [usePoints, setUsePoints] = useState('')
 
   useEffect(() => {
     if (!isLoaded) return       // localStorage 복원 대기
@@ -63,14 +65,19 @@ export default function CheckoutPage() {
   async function loadCart() {
     if (!token) return
     try {
-      const data = await cartApi.get(token)
-      if (data.items.length === 0) {
-        router.push('/cart')
-        return
+      const [data, pointsData] = await Promise.allSettled([
+        cartApi.get(token),
+        myApi.points(token),
+      ])
+      if (data.status === 'fulfilled') {
+        if (data.value.items.length === 0) { router.push('/cart'); return }
+        setCart(data.value)
+      } else {
+        setError('장바구니를 불러오지 못했습니다.')
       }
-      setCart(data)
-    } catch {
-      setError('장바구니를 불러오지 못했습니다.')
+      if (pointsData.status === 'fulfilled') {
+        setAvailablePoints(pointsData.value.grade_info.points)
+      }
     } finally {
       setLoading(false)
     }
@@ -123,6 +130,7 @@ export default function CheckoutPage() {
     setError(null)
 
     try {
+      const pointsToUse = Math.min(Number(usePoints) || 0, availablePoints)
       const { order } = await orderApi.create(token!, {
         shipping_address: {
           recipient: form.recipient.trim(),
@@ -132,6 +140,7 @@ export default function CheckoutPage() {
           detail: form.detail.trim() || undefined,
         },
         coupon_code: couponCode.trim() || undefined,
+        use_points: pointsToUse > 0 ? pointsToUse : undefined,
       })
       router.push(`/order/complete?id=${order.id}`)
     } catch (err) {
@@ -157,7 +166,8 @@ export default function CheckoutPage() {
 
   const shippingFee = cart.subtotal >= SHIPPING_FREE_THRESHOLD ? 0 : SHIPPING_FEE
   const discountAmount = couponResult?.discount_amount ?? 0
-  const totalAmount = Math.max(0, cart.subtotal + shippingFee - discountAmount)
+  const pointsUsed = Math.min(Number(usePoints) || 0, availablePoints)
+  const totalAmount = Math.max(0, cart.subtotal + shippingFee - discountAmount - pointsUsed)
 
   return (
     <div className="mx-auto max-w-screen-lg px-4 py-10">
@@ -272,6 +282,38 @@ export default function CheckoutPage() {
               )}
             </section>
 
+            {/* 적립금 사용 */}
+            {availablePoints > 0 && (
+              <section>
+                <h2 className="text-base font-semibold mb-4 pb-2 border-b border-gray-100">
+                  적립금 사용
+                </h2>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <input
+                      type="number"
+                      value={usePoints}
+                      onChange={(e) => setUsePoints(e.target.value)}
+                      placeholder="사용할 적립금 입력"
+                      min={0}
+                      max={availablePoints}
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-gray-900"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setUsePoints(String(availablePoints))}
+                    className="px-3 py-2.5 border border-gray-200 rounded-lg text-xs hover:bg-gray-50 whitespace-nowrap"
+                  >
+                    전액 사용
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mt-1.5">
+                  보유 적립금: <span className="text-gray-700 font-medium">{availablePoints.toLocaleString()}P</span>
+                </p>
+              </section>
+            )}
+
             {/* 주문 상품 */}
             <section>
               <h2 className="text-base font-semibold mb-4 pb-2 border-b border-gray-100">
@@ -325,6 +367,12 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm text-green-600">
                   <span>쿠폰 할인</span>
                   <span>-{formatPrice(discountAmount)}</span>
+                </div>
+              )}
+              {pointsUsed > 0 && (
+                <div className="flex justify-between text-sm text-blue-600">
+                  <span>적립금 사용</span>
+                  <span>-{pointsUsed.toLocaleString()}P</span>
                 </div>
               )}
               <div className="border-t pt-3 flex justify-between font-bold text-lg">

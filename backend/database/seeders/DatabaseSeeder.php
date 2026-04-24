@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             NoticeSeeder::class,
             FaqSeeder::class,
             CouponSeeder::class,
+            MembershipConfigSeeder::class,
         ]);
     }
 }

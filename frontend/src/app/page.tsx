@@ -1,4 +1,5 @@
 import ProductCard from '@/components/ProductCard'
+import RecommendationSection from '@/components/RecommendationSection'
 import FadeIn from '@/components/motion/FadeIn'
 import ScrollReveal from '@/components/motion/ScrollReveal'
 import StaggerList from '@/components/motion/StaggerList'
@@ -385,6 +386,7 @@ export default function HomePage() {
       <Suspense fallback={<ScrollSkeleton />}>
         <PopularProducts />
       </Suspense>
+      <RecommendationSection />
     </div>
   )
 }

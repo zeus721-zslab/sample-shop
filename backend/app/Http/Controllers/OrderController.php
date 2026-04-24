@@ -46,6 +46,7 @@ class OrderController extends Controller
             'shipping_address.detail'   => 'sometimes|string|max:100',
             'shipping_address.postal_code' => 'required|string|max:10',
             'coupon_code'               => 'sometimes|string|max:50',
+            'use_points'                => 'sometimes|integer|min:0',
         ]);
 
         try {
@@ -54,6 +55,7 @@ class OrderController extends Controller
                 cartItemIds:     $validated['cart_item_ids'] ?? [],
                 shippingAddress: $validated['shipping_address'],
                 couponCode:      $validated['coupon_code'] ?? '',
+                usePoints:       $validated['use_points'] ?? 0,
             );
         } catch (\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);

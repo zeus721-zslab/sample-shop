@@ -3,19 +3,20 @@
 import { myApi, wishlistApi, reviewApi, ApiError } from '@/lib/api'
 import { formatPrice } from '@/lib/format'
 import { useAuth } from '@/store/auth'
-import type { Order, Review, WishlistItem } from '@/types'
+import type { GradeInfo, Order, PointHistory, Review, WishlistItem } from '@/types'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 
-type Tab = 'profile' | 'orders' | 'wishlist' | 'reviews'
+type Tab = 'profile' | 'orders' | 'wishlist' | 'reviews' | 'membership'
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'profile', label: '프로필' },
   { key: 'orders', label: '주문 내역' },
   { key: 'wishlist', label: '위시리스트' },
   { key: 'reviews', label: '내 리뷰' },
+  { key: 'membership', label: '등급·적립금' },
 ]
 
 const STATUS_LABEL: Record<string, string> = {
@@ -431,6 +432,123 @@ function ReviewsTab() {
   )
 }
 
+// ── Membership Tab ────────────────────────────────────────────────────────────
+
+const GRADE_LABEL: Record<string, string> = { newbie: 'Newbie', silver: 'Silver', gold: 'Gold', vip: 'VIP' }
+const GRADE_COLOR: Record<string, string> = {
+  newbie: 'bg-gray-100 text-gray-600',
+  silver: 'bg-sky-100 text-sky-700',
+  gold: 'bg-amber-100 text-amber-700',
+  vip: 'bg-red-100 text-red-700',
+}
+
+function MembershipTab() {
+  const { token } = useAuth()
+  const [gradeInfo, setGradeInfo] = useState<GradeInfo | null>(null)
+  const [histories, setHistories] = useState<PointHistory[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!token) return
+    myApi.points(token)
+      .then((res) => {
+        setGradeInfo(res.grade_info)
+        setHistories(res.histories)
+      })
+      .finally(() => setLoading(false))
+  }, [token])
+
+  if (loading) {
+    return (
+      <div className="animate-pulse space-y-4">
+        <div className="h-32 bg-gray-100 rounded-xl" />
+        <div className="h-48 bg-gray-100 rounded-xl" />
+      </div>
+    )
+  }
+
+  if (!gradeInfo) return null
+
+  const progress = gradeInfo.next_grade && gradeInfo.next_grade_amount
+    ? Math.min(100, Math.round(((gradeInfo.purchased_amount ?? 0) / gradeInfo.next_grade_amount) * 100))
+    : 100
+
+  return (
+    <div className="space-y-6">
+      {/* 현재 등급 카드 */}
+      <div className="rounded-2xl border border-gray-100 p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <p className="text-xs text-gray-400 mb-1">현재 등급</p>
+            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${GRADE_COLOR[gradeInfo.current_grade] ?? 'bg-gray-100 text-gray-600'}`}>
+              {GRADE_LABEL[gradeInfo.current_grade] ?? gradeInfo.current_grade}
+            </span>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-gray-400 mb-1">보유 적립금</p>
+            <p className="text-2xl font-bold">{gradeInfo.points.toLocaleString()}P</p>
+          </div>
+        </div>
+        <div className="text-xs text-gray-400 mb-1">
+          적립률: {gradeInfo.current_point_rate}% (배송 완료 시 자동 적립)
+        </div>
+
+        {/* 다음 등급 프로그레스 */}
+        {gradeInfo.next_grade && gradeInfo.next_grade_amount ? (
+          <div className="mt-4">
+            <div className="flex justify-between text-xs text-gray-400 mb-1.5">
+              <span>최근 12개월 구매액: {(gradeInfo.purchased_amount ?? 0).toLocaleString()}원</span>
+              <span className="font-medium">{GRADE_LABEL[gradeInfo.next_grade] ?? gradeInfo.next_grade}까지 {(gradeInfo.remaining_amount ?? 0).toLocaleString()}원</span>
+            </div>
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gray-900 rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-xs text-gray-400 mt-1">{progress}% 달성</p>
+          </div>
+        ) : (
+          <p className="text-xs text-gray-400 mt-3">최고 등급 VIP입니다. 🎉</p>
+        )}
+      </div>
+
+      {/* 등급 안내 */}
+      <div className="grid grid-cols-4 gap-2">
+        {(['newbie', 'silver', 'gold', 'vip'] as const).map((g) => (
+          <div key={g} className={`rounded-xl p-3 text-center text-xs border ${gradeInfo.current_grade === g ? 'border-gray-900' : 'border-gray-100'}`}>
+            <span className={`inline-block px-2 py-0.5 rounded-full font-semibold mb-1.5 ${GRADE_COLOR[g]}`}>
+              {GRADE_LABEL[g]}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* 적립금 이력 */}
+      <div>
+        <h3 className="text-sm font-semibold mb-3">적립금 이력</h3>
+        {histories.length === 0 ? (
+          <p className="text-sm text-gray-400 py-8 text-center">적립금 이력이 없습니다.</p>
+        ) : (
+          <div className="space-y-1">
+            {histories.map((h) => (
+              <div key={h.id} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
+                <div>
+                  <p className="text-sm">{h.description}</p>
+                  <p className="text-xs text-gray-400">{new Date(h.created_at).toLocaleDateString('ko-KR')}</p>
+                </div>
+                <span className={`text-sm font-semibold ${h.type === 'earn' ? 'text-blue-600' : 'text-red-400'}`}>
+                  {h.type === 'earn' ? '+' : '-'}{h.amount.toLocaleString()}P
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 function MyPageInner() {
@@ -489,6 +607,7 @@ function MyPageInner() {
       {activeTab === 'orders' && <OrdersTab />}
       {activeTab === 'wishlist' && <WishlistTab />}
       {activeTab === 'reviews' && <ReviewsTab />}
+      {activeTab === 'membership' && <MembershipTab />}
     </div>
   )
 }

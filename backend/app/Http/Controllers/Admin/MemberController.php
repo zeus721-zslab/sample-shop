@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\PointHistory;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MemberController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::where('role', '!=', 'admin');
+        $query = User::where('role', '!=', 'admin')->where('role', '!=', 'demo');
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -19,7 +21,7 @@ class MemberController extends Controller
             });
         }
         if ($grade = $request->input('grade')) {
-            $query->where('role', $grade);
+            $query->where('grade', $grade);
         }
 
         $members = $query->latest()->paginate(20)->withQueryString();
@@ -28,9 +30,39 @@ class MemberController extends Controller
 
     public function updateGrade(Request $request, User $user)
     {
-        $request->validate(['grade' => ['required', 'in:customer,silver,gold,vip']]);
-        $user->update(['role' => $request->grade]);
+        $request->validate(['grade' => ['required', 'in:newbie,silver,gold,vip']]);
+        $user->update(['grade' => $request->grade]);
         return back()->with('success', '등급이 변경되었습니다.');
+    }
+
+    public function adjustPoints(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'type'        => 'required|in:earn,use',
+            'amount'      => 'required|integer|min:1',
+            'description' => 'required|string|max:200',
+        ]);
+
+        DB::transaction(function () use ($user, $validated) {
+            if ($validated['type'] === 'earn') {
+                $user->increment('points', $validated['amount']);
+            } else {
+                if ($user->points < $validated['amount']) {
+                    throw new \RuntimeException('적립금이 부족합니다.');
+                }
+                $user->decrement('points', $validated['amount']);
+            }
+
+            PointHistory::create([
+                'user_id'     => $user->id,
+                'type'        => $validated['type'],
+                'amount'      => $validated['amount'],
+                'description' => '[관리자] ' . $validated['description'],
+                'created_at'  => now(),
+            ]);
+        });
+
+        return back()->with('success', '적립금이 조정되었습니다.');
     }
 
     public function toggle(User $user)

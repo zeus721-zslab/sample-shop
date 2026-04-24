@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\StatsController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\InquiryController;
 use App\Http\Controllers\Admin\MemberController;
+use App\Http\Controllers\Admin\MembershipController;
 use App\Http\Controllers\Admin\NoticeController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
@@ -41,9 +42,14 @@ Route::prefix('zslab-manage')->name('admin.')->group(function () {
         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
 
         // 회원 관리
-        Route::get('/members',                    [MemberController::class, 'index'])->name('members.index');
-        Route::patch('/members/{user}/grade',     [MemberController::class, 'updateGrade'])->name('members.grade');
-        Route::patch('/members/{user}/toggle',    [MemberController::class, 'toggle'])->name('members.toggle');
+        Route::get('/members',                        [MemberController::class, 'index'])->name('members.index');
+        Route::patch('/members/{user}/grade',         [MemberController::class, 'updateGrade'])->name('members.grade');
+        Route::patch('/members/{user}/toggle',        [MemberController::class, 'toggle'])->name('members.toggle');
+        Route::post('/members/{user}/points',         [MemberController::class, 'adjustPoints'])->name('members.points');
+
+        // 멤버십 설정
+        Route::get('/membership',                     [MembershipController::class, 'index'])->name('membership.index');
+        Route::put('/membership/{membershipConfig}',  [MembershipController::class, 'update'])->name('membership.update');
 
         // 카테고리 관리
         Route::get('/categories',               [CategoryController::class, 'index'])->name('categories.index');
