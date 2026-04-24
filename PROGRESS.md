@@ -514,6 +514,24 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - https://zslab-shop.duckdns.org/ → 200 ✓ (ChatWidget 포함)
 - https://zslab-shop.duckdns.org/zslab-manage/inquiries → 200 ✓
 
+## 완료된 작업 (zslab-chat GitHub clone 연동)
+
+### STEP 51: zslab-chat GitHub 레포에서 clone 후 연동 (2026-04-24)
+- 기존 /home/zslab/zslab-chat (Docker root 소유 node_modules) → alpine 컨테이너로 삭제
+- git clone https://github.com/zeus721-zslab/zslab-chat.git ✓
+- .env 생성: DB_HOST=mariadb, DB_DATABASE=zslab_shop, REDIS_URL (쇼핑몰 동일 DB/Redis)
+- docker-compose.yml 볼륨 `./zslab-chat:/app` — 경로 일치 ✓
+- docker compose down zslab-chat → up -d zslab-chat ✓
+- npm install 128 packages (dotenv, @socket.io/redis-adapter 포함)
+- Redis adapter connected ✓
+- GET /health → `{"status":"ok","service":"zslab-chat"}` ✓
+
+**새 레포 구조 (모듈화):**
+- server/config.js, db.js
+- server/handlers/{chat,room,typing}.js
+- server/middleware/auth.js
+- server/models/{Message,Room}.js
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY

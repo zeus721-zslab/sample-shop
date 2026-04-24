@@ -1,188 +1,83 @@
 'use strict';
 
-const express   = require('express');
-const { Server } = require('socket.io');
-const http      = require('http');
-const mysql     = require('mysql2/promise');
-const Redis     = require('ioredis');
-const jwt       = require('jsonwebtoken');
+require('dotenv').config();
 
-// ── 환경변수 ──────────────────────────────────────────────────────────────────
-const PORT       = parseInt(process.env.PORT ?? '3001', 10);
-const JWT_SECRET = process.env.JWT_SECRET ?? 'zslab-chat-secret';
-const REDIS_URL  = process.env.REDIS_URL   ?? 'redis://redis:6379';
-const DB_CONFIG  = {
-  host    : process.env.DB_HOST     ?? 'mariadb',
-  port    : parseInt(process.env.DB_PORT ?? '3306', 10),
-  database: process.env.DB_DATABASE ?? 'zslab_shop',
-  user    : process.env.DB_USERNAME ?? 'zslab',
-  password: process.env.DB_PASSWORD ?? '',
-  waitForConnections: true,
-  connectionLimit   : 10,
-};
+const express = require('express');
+const http    = require('http');
+const { Server }       = require('socket.io');
+const { createAdapter } = require('@socket.io/redis-adapter');
+const Redis   = require('ioredis');
 
-// ── DB / Redis ────────────────────────────────────────────────────────────────
-let pool;
-let pub, sub;
+const config = require('./config');
+const { authMiddleware, generateToken } = require('./middleware/auth');
+const { registerRoomHandlers }    = require('./handlers/room');
+const { registerChatHandlers }    = require('./handlers/chat');
+const { registerTypingHandlers }  = require('./handlers/typing');
 
-async function initDB() {
-  pool = mysql.createPool(DB_CONFIG);
-  // 연결 확인
-  const conn = await pool.getConnection();
-  conn.release();
-  console.log('[DB] MariaDB connected');
-}
+// ── 환경변수 ──────────────────────────────────────────────────
+const PORT      = parseInt(process.env.PORT ?? '3001', 10);
+const REDIS_URL = process.env.REDIS_URL ?? '';
 
-function initRedis() {
-  pub = new Redis(REDIS_URL);
-  sub = new Redis(REDIS_URL);
-  pub.on('error', e => console.error('[Redis pub]', e.message));
-  sub.on('error', e => console.error('[Redis sub]', e.message));
-  sub.subscribe('chat:broadcast', (err) => {
-    if (err) console.error('[Redis sub] subscribe error:', err);
-  });
-  // Redis pub/sub → 해당 room 소켓에 브로드캐스트
-  sub.on('message', (_channel, data) => {
-    try {
-      const parsed = JSON.parse(data);
-      if (parsed.roomId) {
-        io.to(`room:${parsed.roomId}`).emit(parsed.event, parsed.payload);
-      }
-    } catch {}
-  });
-  console.log('[Redis] connected');
-}
+// ── Express ───────────────────────────────────────────────────
+const app = express();
+app.use(require('cors')());
+app.use(express.json());
 
-// ── Express + Socket.io ───────────────────────────────────────────────────────
-const app    = express();
-const server = http.createServer(app);
-const io     = new Server(server, {
-  path : '/socket.io',
-  cors : { origin: '*', methods: ['GET', 'POST'] },
+// 헬스체크
+app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'zslab-chat' }));
+
+// JWT 발급 (서버 사이드 연동 편의 엔드포인트 — 개발/테스트용)
+app.post('/api/token', (req, res) => {
+  const { userId, userType } = req.body;
+  if (!userId) return res.status(400).json({ error: 'userId required' });
+  const token = generateToken(userId, userType ?? 'user');
+  res.json({ token });
+});
+
+// ── HTTP 서버 + Socket.io ─────────────────────────────────────
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+  cors      : { origin: '*', methods: ['GET', 'POST'] },
   transports: ['websocket', 'polling'],
 });
 
-app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'zslab-chat' }));
-
-// ── JWT 인증 미들웨어 ─────────────────────────────────────────────────────────
-io.use((socket, next) => {
-  const token = socket.handshake.auth?.token;
-  if (!token) return next(new Error('unauthorized'));
+// Redis 어댑터 (멀티 인스턴스 지원 — REDIS_URL 설정 시 활성화)
+if (REDIS_URL) {
   try {
-    const payload = jwt.verify(token, JWT_SECRET);
-    socket.userId   = payload.userId;
-    socket.userType = payload.userType ?? 'user';
-    next();
-  } catch {
-    next(new Error('unauthorized'));
+    const pub = new Redis(REDIS_URL);
+    const sub = pub.duplicate();
+    pub.on('error', (err) => console.error('[redis] pub error:', err.message));
+    sub.on('error', (err) => console.error('[redis] sub error:', err.message));
+    io.adapter(createAdapter(pub, sub));
+    console.log('[redis] adapter connected:', REDIS_URL);
+  } catch (err) {
+    console.warn('[redis] adapter 연결 실패, 단일 인스턴스로 실행:', err.message);
   }
-});
-
-function broadcast(roomId, event, payload) {
-  pub.publish('chat:broadcast', JSON.stringify({ roomId, event, payload }));
 }
 
-// ── 소켓 이벤트 ──────────────────────────────────────────────────────────────
+// ── 소켓 인증 + 이벤트 등록 ──────────────────────────────────
+io.use(authMiddleware);
+
 io.on('connection', (socket) => {
-  console.log(`[Socket] connect uid=${socket.userId} type=${socket.userType}`);
+  console.log(`[socket] connect  id=${socket.id} user=${socket.user.id} type=${socket.user.type}`);
 
-  // 채팅방 입장
-  socket.on('join_room', async ({ roomId }) => {
-    if (!roomId) return;
+  registerRoomHandlers(io, socket);
+  registerChatHandlers(io, socket);
+  registerTypingHandlers(io, socket);
 
-    // 권한 확인
-    const [rows] = await pool.query(
-      'SELECT * FROM chat_participants WHERE room_id = ? AND user_id = ?',
-      [roomId, socket.userId]
-    );
-
-    // admin은 모든 방 접근 가능, user는 참가자인 방만
-    if (socket.userType !== 'admin' && rows.length === 0) {
-      socket.emit('error', { message: 'Forbidden' });
-      return;
-    }
-
-    // admin이 처음 접근하면 참가자 등록
-    if (socket.userType === 'admin' && rows.length === 0) {
-      await pool.query(
-        'INSERT IGNORE INTO chat_participants (room_id, user_id, user_type, joined_at) VALUES (?, ?, "admin", NOW())',
-        [roomId, socket.userId]
-      );
-    }
-
-    socket.join(`room:${roomId}`);
-    socket.currentRoomId = roomId;
-
-    // 방 + 메시지 조회
-    const [[room]]    = await pool.query('SELECT * FROM chat_rooms WHERE id = ?', [roomId]);
-    const [messages]  = await pool.query(
-      'SELECT * FROM chat_messages WHERE room_id = ? ORDER BY created_at ASC LIMIT 100',
-      [roomId]
-    );
-
-    socket.emit('room_joined', { room, messages });
-  });
-
-  // 메시지 전송
-  socket.on('send_message', async ({ roomId, message }) => {
-    if (!roomId || !message?.trim()) return;
-
-    const [result] = await pool.query(
-      'INSERT INTO chat_messages (room_id, sender_id, sender_type, message, is_read, created_at) VALUES (?, ?, ?, ?, 0, NOW())',
-      [roomId, socket.userId, socket.userType, message.trim()]
-    );
-
-    const [[msg]] = await pool.query('SELECT * FROM chat_messages WHERE id = ?', [result.insertId]);
-    broadcast(roomId, 'message_received', msg);
-  });
-
-  // 읽음 처리
-  socket.on('mark_read', async ({ roomId }) => {
-    if (!roomId) return;
-    const oppositeType = socket.userType === 'admin' ? 'user' : 'admin';
-    await pool.query(
-      'UPDATE chat_messages SET is_read = 1 WHERE room_id = ? AND sender_type = ? AND is_read = 0',
-      [roomId, oppositeType]
-    );
-    // 참가자 last_read_at 업데이트
-    await pool.query(
-      'UPDATE chat_participants SET last_read_at = NOW() WHERE room_id = ? AND user_id = ?',
-      [roomId, socket.userId]
-    );
-  });
-
-  // 타이핑 시작
-  socket.on('typing_start', ({ roomId }) => {
-    if (!roomId) return;
-    socket.to(`room:${roomId}`).emit('typing', { isTyping: true, userId: socket.userId });
-  });
-
-  // 타이핑 종료
-  socket.on('typing_stop', ({ roomId }) => {
-    if (!roomId) return;
-    socket.to(`room:${roomId}`).emit('typing', { isTyping: false, userId: socket.userId });
-  });
-
-  socket.on('disconnect', () => {
-    console.log(`[Socket] disconnect uid=${socket.userId}`);
+  socket.on('disconnect', (reason) => {
+    console.log(`[socket] disconnect id=${socket.id} reason=${reason}`);
   });
 });
 
-// ── 서버 기동 ─────────────────────────────────────────────────────────────────
-(async () => {
-  // DB/Redis 연결 재시도 (컨테이너 시작 순서 대기)
-  for (let i = 0; i < 10; i++) {
-    try {
-      await initDB();
-      initRedis();
-      break;
-    } catch (e) {
-      console.warn(`[Boot] retry ${i + 1}/10: ${e.message}`);
-      await new Promise(r => setTimeout(r, 3000));
-    }
-  }
+// ── 서버 시작 ─────────────────────────────────────────────────
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`[zslab-chat] listening on :${PORT}`);
+  console.log(`  mode       : ${config.chat.mode}`);
+  console.log(`  groupChat  : ${config.chat.groupChat}`);
+  console.log(`  typing     : ${config.chat.typing}`);
+  console.log(`  readReceipt: ${config.chat.readReceipt}`);
+  console.log(`  redis      : ${REDIS_URL || '(disabled — single instance)'}`);
+});
 
-  server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[zslab-chat] listening on :${PORT}`);
-  });
-})();
+module.exports = { app, io, httpServer };
