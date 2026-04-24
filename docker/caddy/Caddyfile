@@ -9,12 +9,10 @@
     encode gzip
 
     # 채팅 서버: /chat/* → zslab-chat (WebSocket 지원)
+    # ※ Nginx가 gateway_net으로 직접 프록시하므로 이 블록은 fallback용
     handle /chat/* {
         uri strip_prefix /chat
-        reverse_proxy zslab-chat:3001 {
-            header_up Upgrade {http.upgrade}
-            header_up Connection {http.connection}
-        }
+        reverse_proxy zslab-chat:3001
     }
 
     # API 요청: /api/* → Laravel (CORS는 Laravel HandleCors 미들웨어가 처리)

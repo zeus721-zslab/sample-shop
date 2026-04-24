@@ -91,6 +91,7 @@ services:
       - JWT_SECRET=${CHAT_JWT_SECRET}
     networks:
       - zslab_net
+      - gateway_net
     depends_on:
       - mariadb
       - redis

@@ -590,6 +590,42 @@ curl https://api.zslab-shop.duckdns.org/api/health
 → uri strip_prefix /chat → zslab-chat:3001/socket.io → Socket.io v4 서버
 ```
 
+## 완료된 작업 (WebSocket 업그레이드 문제 해결)
+
+### STEP 54: WebSocket 연결 실패 해결 (2026-04-24)
+
+**원인 분석 (단계별):**
+
+1. **NEXT_PUBLIC_CHAT_URL 누락** (STEP 53에서 수정) — `chatUrl = ''`이라 소켓 연결 시도 자체 없음
+2. **Caddy `{http.connection}` 플레이스홀더 이슈** — Nginx hop-by-hop 처리 후 Connection 헤더가 비어
+   `header_up Connection {http.connection}` 이 빈 값 전달 → engine.io "Bad handshake method" 400
+3. **Caddy 자동 WebSocket 처리 한계** — header_up 제거 후에도 Nginx → Caddy → zslab-chat 경로에서 WebSocket 업그레이드 실패 지속
+4. **근본 원인**: 2-hop 프록시(Nginx → Caddy → zslab-chat) 구조에서 hop-by-hop 헤더 손실
+
+**최종 해결 방법 (아키텍처 변경):**
+- `docker-compose.yml`: zslab-chat 서비스에 `gateway_net` 추가 (Nginx와 동일 네트워크)
+- `docker/caddy/Caddyfile`: /chat/* 핸들러 단순화 (fallback 용도만)
+- `/home/gateway/nginx/nginx.conf`:
+  - `/chat/` location → `proxy_pass http://zslab_chat:3001/;` **직접 연결** (Caddy 우회)
+  - 주의: 변수 없이 URI 직접 지정 → Nginx가 `/chat/` prefix 자동 제거 (`/socket.io/?...` 전달)
+  - `proxy_set_header Connection $connection_upgrade` (map 활용, 동적 전환)
+  - `proxy_read_timeout 3600s`, `proxy_buffering off`
+
+**검증:**
+- polling: `https://zslab-shop.duckdns.org/chat/socket.io/?EIO=4&transport=polling` → 200 ✓
+- WebSocket 전체 경로 (TLS → Nginx → zslab_chat:3001): `101 Switching Protocols` ✓
+- Nginx access log: `101 0` 확인 ✓
+- 사이트 HTTP 200 ✓
+
+**프록시 체인 (변경 전 → 변경 후):**
+```
+변경 전: Browser → Nginx → Caddy → zslab-chat  (2-hop, WebSocket 실패)
+변경 후: Browser → Nginx → zslab-chat           (1-hop, WebSocket 성공)
+         (일반 HTTP API/Frontend → Nginx → Caddy 유지)
+```
+
+**브라우저 새로고침 필요**: 재연결 시 `connected = true`, 입력창 활성화됨
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
