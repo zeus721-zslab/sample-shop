@@ -560,6 +560,36 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - 빌드 성공 ✓
 - https://zslab-shop.duckdns.org/ → 200 ✓
 
+## 완료된 작업 (채팅 소켓 연결 버그 수정)
+
+### STEP 53: 채팅 위젯 소켓 연결 "연결 중..." 문제 해결 (2026-04-24)
+
+**원인:**
+- `frontend/.env.production`에 `NEXT_PUBLIC_CHAT_URL`이 누락됨
+- Next.js standalone 빌드는 `NEXT_PUBLIC_*` 변수를 빌드 타임에 소스에 embed (런타임 docker-compose 환경변수 무시)
+- `useChat.ts`에서 `chatUrl = ''` → `if (!token || !chatUrl) return` 조기 리턴 → 소켓 연결 시도 자체 없음
+- `connected`가 항상 `false` → 입력창 disabled (거절 아이콘)
+
+**수정 내용:**
+- `frontend/.env.production`: `NEXT_PUBLIC_CHAT_URL=https://zslab-shop.duckdns.org` 추가
+- `docker compose build --no-cache frontend` 강제 리빌드
+- `docker compose up -d frontend` 재시작
+
+**검증:**
+- 프론트엔드 빌드 내 `https://zslab-shop.duckdns.org` URL embed 확인 ✓
+- `https://zslab-shop.duckdns.org/chat/socket.io/?EIO=4&transport=polling` → 정상 핸드쉐이크 응답 ✓
+  ```json
+  {"sid":"...","upgrades":["websocket"],"pingInterval":25000,"pingTimeout":20000}
+  ```
+- zslab_chat 컨테이너 내부 health → `{"status":"ok","service":"zslab-chat"}` ✓
+- https://zslab-shop.duckdns.org/ → 200 ✓
+
+**소켓 연결 전체 경로:**
+```
+브라우저 → HTTPS → Nginx (gateway) → Caddy (:8080) → /chat/* 매치
+→ uri strip_prefix /chat → zslab-chat:3001/socket.io → Socket.io v4 서버
+```
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
