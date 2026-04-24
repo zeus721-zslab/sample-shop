@@ -492,6 +492,11 @@ function MembershipTab() {
         <div className="text-xs text-gray-400 mb-1">
           적립률: {gradeInfo.current_point_rate}% (배송 완료 시 자동 적립)
         </div>
+        {gradeInfo.current_point_rate === 0 && (
+          <div className="mt-2 rounded-lg bg-amber-50 border border-amber-100 px-3 py-2 text-xs text-amber-700">
+            Newbie 등급은 포인트가 적립되지 않습니다. Silver 등급(최근 12개월 30만원 이상 구매)부터 적립이 시작됩니다.
+          </div>
+        )}
 
         {/* 다음 등급 프로그레스 */}
         {gradeInfo.next_grade && gradeInfo.next_grade_amount ? (
@@ -528,7 +533,11 @@ function MembershipTab() {
       <div>
         <h3 className="text-sm font-semibold mb-3">적립금 이력</h3>
         {histories.length === 0 ? (
-          <p className="text-sm text-gray-400 py-8 text-center">적립금 이력이 없습니다.</p>
+          <p className="text-sm text-gray-400 py-8 text-center">
+            {gradeInfo.current_point_rate === 0
+              ? 'Newbie 등급은 포인트가 적립되지 않아 이력이 없습니다.'
+              : '적립금 이력이 없습니다.'}
+          </p>
         ) : (
           <div className="space-y-1">
             {histories.map((h) => (
