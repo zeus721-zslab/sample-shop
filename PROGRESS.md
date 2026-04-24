@@ -806,6 +806,17 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - 멤버십 등급제 (Newbie/Silver/Gold/VIP) — DB 기반 등급 기준/적립률 동적 관리
 - Elasticsearch 기반 구매 이력/협업 필터링/성별-나이 세그먼트 맞춤 상품 추천
 
+## 완료된 작업 (README 전면 업데이트)
+
+### README 업데이트 (2026-04-25)
+- Tech Stack: Nginx 게이트웨이, ELK 스택, Framer Motion, Node.js 추가
+- 주요 기능: 맞춤 추천/쿠폰/멤버십/적립금/채팅/ELK 실제 구현 내용 반영, "(예정)" 문구 전면 제거
+- System Architecture: Nginx 마스터 게이트웨이 + Caddy 내부 구조, zslab-chat/ELK 추가, Docker 네트워크 테이블
+- 페이지 구성: 고객 18페이지 + 관리자 12페이지 전체 목록
+- API Overview: 50개 엔드포인트 전체 (쿠폰/적립금/추천/채팅 포함)
+- Directory Structure: zslab-chat/, docker/elk, Nginx 게이트웨이 반영
+- GitHub push 완료 (commit: docs: README 전면 업데이트)
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
