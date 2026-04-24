@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\StatsController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\InquiryController;
 use App\Http\Controllers\Admin\MemberController;
@@ -24,6 +25,7 @@ Route::prefix('zslab-manage')->name('admin.')->group(function () {
 
         Route::get('/',          fn () => redirect()->route('admin.dashboard'));
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/stats',     [StatsController::class, 'index'])->name('stats');
 
         // 상품 관리
         Route::get('/products',              [ProductController::class, 'index'])->name('products.index');

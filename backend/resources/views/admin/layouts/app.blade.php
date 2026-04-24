@@ -66,6 +66,13 @@
             </a>
           </li>
           <li class="nav-item">
+            <a href="{{ route('admin.stats') }}"
+               class="nav-link {{ request()->routeIs('admin.stats') ? 'active' : '' }}">
+              <i class="nav-icon bi bi-bar-chart-line"></i>
+              <p>통계</p>
+            </a>
+          </li>
+          <li class="nav-item">
             <a href="{{ route('admin.products.index') }}"
                class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
               <i class="nav-icon bi bi-box-seam"></i>

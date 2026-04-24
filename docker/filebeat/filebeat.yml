@@ -1,0 +1,27 @@
+filebeat.inputs:
+  # Laravel 애플리케이션 로그
+  - type: log
+    enabled: true
+    paths:
+      - /logs/laravel/*.log
+    fields:
+      log_type: laravel
+    fields_under_root: false
+    multiline:
+      pattern: '^\['
+      negate: true
+      match: after
+    encoding: utf-8
+
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+output.logstash:
+  hosts: ["logstash:5044"]
+
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+
+logging.level: warning

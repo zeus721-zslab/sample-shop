@@ -713,6 +713,41 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - **주문 완료 페이지** (`/order/complete`): 할인 라벨을 "쿠폰 할인"으로 변경, 쿠폰 코드 배지 추가
 - `Order` 타입에 `coupon_code: string | null` 필드 추가
 
+## 완료된 작업 (ELK 통계 대시보드)
+
+### STEP 57: ELK 통계 대시보드 구성 (2026-04-25)
+
+**인프라 (docker-compose.yml):**
+- `zslab_logstash`: Logstash 8.13.0, 256m heap, Beats → Grok → ES 파이프라인
+- `zslab_kibana`: Kibana 8.13.0, `/kibana/` basePath 설정, 내부망 전용
+- `zslab_filebeat`: Filebeat 8.13.0, Laravel 로그 수집 (`backend/storage/logs/`)
+  - `--strict.perms=false` 플래그로 파일 소유자 검사 우회
+
+**설정 파일:**
+- `docker/logstash/config/logstash.yml`: xpack.monitoring 비활성화
+- `docker/logstash/pipeline/main.conf`: Laravel 로그 Grok 파싱, ES 출력 (인덱스: `zslab-logs-laravel-YYYY.MM.dd`)
+- `docker/kibana/kibana.yml`: basePath=/kibana, rewriteBasePath=true, security 비활성화
+- `docker/filebeat/filebeat.yml`: multiline 설정 (Laravel 멀티라인 스택트레이스 지원)
+
+**Caddy:** `/kibana/*` → `kibana:5601` 프록시 추가
+
+**관리자 통계 페이지 (`/zslab-manage/stats`):**
+- `Admin\StatsController.php`: DB 쿼리 4종 (일별매출/주문상태/인기상품/시간대별)
+- `admin/stats/index.blade.php`: Chart.js 4.4.0 CDN
+  - 최근 30일 매출 추이 (Line, 매출+주문수 이중축)
+  - 주문 상태별 비율 (Doughnut)
+  - 시간대별 주문 분포 (Bar)
+  - 인기 상품 TOP 10 수평 막대 (수량+매출 이중)
+  - ELK 상태 테이블 + Kibana 링크
+- 사이드바 통계 메뉴 추가
+
+**검증:**
+- zslab_logstash: Up ✓
+- zslab_kibana: Up ✓
+- zslab_filebeat: Up ✓
+- StatsController 렌더링 테스트 ✓
+- https://zslab-shop.duckdns.org/ → HTTP 200 ✓
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY

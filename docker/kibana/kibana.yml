@@ -1,0 +1,11 @@
+server.host: "0.0.0.0"
+server.port: 5601
+server.basePath: "/kibana"
+server.rewriteBasePath: true
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+xpack.security.enabled: false
+monitoring.enabled: false
+telemetry.enabled: false
+newsfeed.enabled: false
+# 메모리 절약
+node.options: ["--max-old-space-size=256"]

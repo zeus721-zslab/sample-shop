@@ -9,6 +9,7 @@ volumes:
   mariadb_data:
   redis_data:
   elasticsearch_data:
+  kibana_data:
   caddy_data:
   caddy_certs:
 services:
@@ -131,3 +132,43 @@ services:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
       - zslab_net
+
+  logstash:
+    image: logstash:8.13.0
+    container_name: zslab_logstash
+    restart: unless-stopped
+    environment:
+      - LS_JAVA_OPTS=-Xms256m -Xmx256m
+    volumes:
+      - ./docker/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./docker/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    networks:
+      - zslab_net
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: kibana:8.13.0
+    container_name: zslab_kibana
+    restart: unless-stopped
+    volumes:
+      - ./docker/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+      - kibana_data:/usr/share/kibana/data
+    networks:
+      - zslab_net
+    depends_on:
+      - elasticsearch
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.13.0
+    container_name: zslab_filebeat
+    restart: unless-stopped
+    user: root
+    command: filebeat -e --strict.perms=false
+    volumes:
+      - ./docker/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./backend/storage/logs:/logs/laravel:ro
+    networks:
+      - zslab_net
+    depends_on:
+      - logstash

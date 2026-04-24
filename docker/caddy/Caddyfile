@@ -30,6 +30,11 @@
         reverse_proxy api:8080
     }
 
+    # Kibana (관리자 전용 — 내부망 프록시, 외부 직접 접근 불가)
+    handle /kibana/* {
+        reverse_proxy kibana:5601
+    }
+
     # 나머지 → Next.js
     handle {
         reverse_proxy frontend:3000
