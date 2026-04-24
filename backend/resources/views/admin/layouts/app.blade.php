@@ -58,6 +58,8 @@
     <div class="sidebar-wrapper">
       <nav class="mt-2">
         <ul class="nav sidebar-menu flex-column" role="menu">
+
+          {{-- ── 대시보드 ─────────────────────────────── --}}
           <li class="nav-item">
             <a href="{{ route('admin.dashboard') }}"
                class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
@@ -72,6 +74,9 @@
               <p>통계</p>
             </a>
           </li>
+
+          {{-- ── 커머스 관리 ──────────────────────────── --}}
+          <li class="nav-header small text-uppercase text-muted px-3 py-2 mt-1" style="font-size:.65rem;letter-spacing:.08em;">커머스 관리</li>
           <li class="nav-item">
             <a href="{{ route('admin.products.index') }}"
                class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
@@ -87,10 +92,10 @@
             </a>
           </li>
           <li class="nav-item">
-            <a href="{{ route('admin.members.index') }}"
-               class="nav-link {{ request()->routeIs('admin.members.*') ? 'active' : '' }}">
-              <i class="nav-icon bi bi-people"></i>
-              <p>회원 관리</p>
+            <a href="{{ route('admin.coupons.index') }}"
+               class="nav-link {{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}">
+              <i class="nav-icon bi bi-ticket-perforated"></i>
+              <p>쿠폰 관리</p>
             </a>
           </li>
           <li class="nav-item">
@@ -100,6 +105,26 @@
               <p>카테고리 관리</p>
             </a>
           </li>
+
+          {{-- ── 고객 관리 ────────────────────────────── --}}
+          <li class="nav-header small text-uppercase text-muted px-3 py-2 mt-1" style="font-size:.65rem;letter-spacing:.08em;">고객 관리</li>
+          <li class="nav-item">
+            <a href="{{ route('admin.members.index') }}"
+               class="nav-link {{ request()->routeIs('admin.members.*') ? 'active' : '' }}">
+              <i class="nav-icon bi bi-people"></i>
+              <p>회원 관리</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ route('admin.inquiries.index') }}"
+               class="nav-link {{ request()->routeIs('admin.inquiries.*') ? 'active' : '' }}">
+              <i class="nav-icon bi bi-chat-dots"></i>
+              <p>1:1 문의</p>
+            </a>
+          </li>
+
+          {{-- ── 콘텐츠 관리 ──────────────────────────── --}}
+          <li class="nav-header small text-uppercase text-muted px-3 py-2 mt-1" style="font-size:.65rem;letter-spacing:.08em;">콘텐츠 관리</li>
           <li class="nav-item">
             <a href="{{ route('admin.notices.index') }}"
                class="nav-link {{ request()->routeIs('admin.notices.*') ? 'active' : '' }}">
@@ -114,20 +139,7 @@
               <p>FAQ 관리</p>
             </a>
           </li>
-          <li class="nav-item">
-            <a href="{{ route('admin.coupons.index') }}"
-               class="nav-link {{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}">
-              <i class="nav-icon bi bi-ticket-perforated"></i>
-              <p>쿠폰 관리</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ route('admin.inquiries.index') }}"
-               class="nav-link {{ request()->routeIs('admin.inquiries.*') ? 'active' : '' }}">
-              <i class="nav-icon bi bi-chat-dots"></i>
-              <p>1:1 문의</p>
-            </a>
-          </li>
+
         </ul>
       </nav>
     </div>
