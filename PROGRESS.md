@@ -817,6 +817,24 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - Directory Structure: zslab-chat/, docker/elk, Nginx 게이트웨이 반영
 - GitHub push 완료 (commit: docs: README 전면 업데이트)
 
+## 버그 수정
+
+### 관리자 패널 delivered 처리 시 적립금 미적립 버그 (2026-04-25)
+
+**원인:**
+- `Admin\OrderController::updateStatus()`가 `$order->update(['status' => ...])` 직접 호출
+- `OrderService::updateStatus()`를 우회 → `MembershipService::earnPoints()`, `recalculateGrade()`, `delivered_at` 타임스탬프 모두 미처리
+
+**수정:**
+- `Admin\OrderController`에 `MembershipService` 주입
+- `updateStatus()`: `shipped_at` / `delivered_at` 타임스탬프 자동 설정
+- `delivered` 전환 시 `earnPoints()` + `recalculateGrade()` 호출 (DB transaction 내)
+
+**해당 주문 보정 (ORD-20260424-UQZLZXMB, order_id=10):**
+- `delivered_at` NULL → `now()` 수동 보정
+- 사용자 grade = newbie (point_rate 0%) → 적립금 0P (설계 정상)
+- Silver(1.5%) 등급 검증: 19,800 × 1.5% = 297P 정상 계산 확인
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
