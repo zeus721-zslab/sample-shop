@@ -50,7 +50,7 @@ class MyController extends Controller
     {
         $orders = Order::where('user_id', $request->user()->id)
             ->with(['items' => fn ($q) => $q->select('id', 'order_id', 'product_id', 'product_name', 'product_image', 'quantity', 'unit_price', 'total_price', 'options')])
-            ->select('id', 'order_number', 'status', 'total_amount', 'final_amount', 'payment_method', 'paid_at', 'shipped_at', 'delivered_at', 'created_at')
+            ->select('id', 'order_number', 'status', 'total_amount', 'discount_amount', 'final_amount', 'coupon_code', 'payment_method', 'paid_at', 'shipped_at', 'delivered_at', 'created_at')
             ->latest()
             ->paginate(10);
 
