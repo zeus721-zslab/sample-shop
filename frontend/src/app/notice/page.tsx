@@ -3,6 +3,7 @@ import { noticeApi } from '@/lib/api'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: '공지사항' }
 
 const CATEGORY_LABELS: Record<string, string> = {
