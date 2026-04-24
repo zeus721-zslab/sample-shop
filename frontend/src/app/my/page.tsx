@@ -224,17 +224,39 @@ function OrdersTab() {
             ))}
           </div>
 
-          <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-            <span className="text-sm font-bold">{formatPrice(order.final_amount)}</span>
-            {(order.status === 'pending' || order.status === 'paid') && (
-              <button
-                onClick={() => handleCancel(order.id)}
-                disabled={cancellingId === order.id}
-                className="text-xs text-gray-400 hover:text-red-400 underline disabled:opacity-50"
-              >
-                {cancellingId === order.id ? '처리 중…' : '주문 취소'}
-              </button>
-            )}
+          <div className="pt-3 border-t border-gray-50">
+            {/* 금액 흐름 */}
+            <div className="space-y-1 mb-2">
+              {order.discount_amount > 0 && (
+                <>
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>상품 금액</span>
+                    <span>{formatPrice(order.total_amount)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-green-600">
+                    <span>
+                      쿠폰 할인
+                      {order.coupon_code && (
+                        <code className="ml-1 bg-green-50 px-1 rounded text-[10px]">{order.coupon_code}</code>
+                      )}
+                    </span>
+                    <span>-{formatPrice(order.discount_amount)}</span>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold">{formatPrice(order.final_amount)}</span>
+              {(order.status === 'pending' || order.status === 'paid') && (
+                <button
+                  onClick={() => handleCancel(order.id)}
+                  disabled={cancellingId === order.id}
+                  className="text-xs text-gray-400 hover:text-red-400 underline disabled:opacity-50"
+                >
+                  {cancellingId === order.id ? '처리 중…' : '주문 취소'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       ))}

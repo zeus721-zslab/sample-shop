@@ -76,6 +76,7 @@ export interface Order {
   total_amount: number
   discount_amount: number
   final_amount: number
+  coupon_code: string | null
   shipping_address: {
     recipient: string
     phone: string

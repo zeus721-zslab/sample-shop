@@ -705,6 +705,14 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - /zslab-manage/coupons → HTTP 200 ✓
 - https://zslab-shop.duckdns.org/ → HTTP 200 ✓
 
+## 완료된 작업 (쿠폰 UI 확장)
+
+### STEP 56: 쿠폰 정보 표시 확장 (2026-04-25)
+- **관리자 주문 상세** (`/zslab-manage/orders/{id}`): 결제금액 4단계 흐름 (상품금액 → 쿠폰코드+할인 → 최종금액 → 실결제금액), 배송지 키 불일치 버그 수정 (name→recipient, zip→postal_code, address1/2→address+detail)
+- **마이페이지 주문 내역** (`/my?tab=orders`): 쿠폰 사용 시 상품금액 + 쿠폰코드 배지 + 할인금액 표시, 미사용 시 숨김
+- **주문 완료 페이지** (`/order/complete`): 할인 라벨을 "쿠폰 할인"으로 변경, 쿠폰 코드 배지 추가
+- `Order` 타입에 `coupon_code: string | null` 필드 추가
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY

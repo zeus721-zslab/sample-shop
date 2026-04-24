@@ -99,8 +99,15 @@ function OrderCompleteInner() {
           </div>
           {order.discount_amount > 0 && (
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">할인</span>
-              <span className="text-blue-500">-{formatPrice(order.discount_amount)}</span>
+              <span className="text-gray-500">
+                쿠폰 할인
+                {order.coupon_code && (
+                  <code className="ml-1.5 bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-[11px]">
+                    {order.coupon_code}
+                  </code>
+                )}
+              </span>
+              <span className="text-green-600">-{formatPrice(order.discount_amount)}</span>
             </div>
           )}
           <div className="flex justify-between font-bold text-base pt-1 border-t">
