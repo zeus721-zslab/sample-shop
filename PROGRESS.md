@@ -532,6 +532,34 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - server/middleware/auth.js
 - server/models/{Message,Room}.js
 
+## 완료된 작업 (채팅 위젯 UI 개선)
+
+### STEP 52: 채팅 위젯 애니메이션 + 쇼핑몰 톤앤매너 개선 (2026-04-24)
+
+**변경 파일:**
+- `frontend/src/components/chat/ChatWidget.tsx` — Framer Motion 적용 전면 개편
+- `frontend/src/components/chat/ChatWindow.tsx` — Tailwind + 에디토리얼 디자인 전환
+- `frontend/src/app/globals.css` — `chatBounce` 키프레임 + `.chat-bounce` 클래스 추가
+
+**ChatWidget 개선:**
+- AnimatePresence + motion.div로 채팅창 슬라이드업 (y:16→0, scale:0.96→1, duration:0.22s)
+- motion.button: whileHover scale(1.06), whileTap scale(0.94)
+- 아이콘 전환 애니메이션: 열기(채팅 아이콘) ↔ 닫기(X) — rotate 45도 페이드 교차
+- 미읽음 뱃지: spring scale 팝인/아웃 (AnimatePresence)
+- 버튼 색상: `#4f46e5 purple` → `#111 black` (쇼핑몰 에디토리얼 톤)
+
+**ChatWindow 개선:**
+- 인라인 style 제거 → Tailwind 클래스 전환
+- 헤더: purple → black, 연결 상태 도트 인디케이터 (emerald/gray)
+- 메시지 버블: isMine = `#111 bg` + `rounded-br-sm`, admin = `gray-100` + `rounded-bl-sm`
+- 타이핑 인디케이터: `chat-bounce` CSS 클래스 (globals.css)
+- 입력창: focus:border-[#111] 언더라인, 전송 버튼 아이콘(SVG) 교체
+- 빈 메시지 상태: 아이콘 + 안내 문구
+
+**검증:**
+- 빌드 성공 ✓
+- https://zslab-shop.duckdns.org/ → 200 ✓
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
