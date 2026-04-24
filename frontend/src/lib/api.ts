@@ -1,4 +1,4 @@
-import type { CartData, Category, Order, PaginatedResponse, Product, Review, User, WishlistItem } from '@/types'
+import type { CartData, Category, Faq, Notice, Order, PaginatedResponse, Product, Review, User, WishlistItem } from '@/types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://zslab-shop.duckdns.org/api'
 
@@ -242,6 +242,28 @@ export const searchApi = {
   search(q: string, page = 1, perPage = 20) {
     const params = new URLSearchParams({ q, page: String(page), per_page: String(perPage) })
     return request<PaginatedResponse<Product>>(`/search?${params}`)
+  },
+}
+
+// ── Notices ───────────────────────────────────────────────────────────────────
+
+export const noticeApi = {
+  async list(category?: string): Promise<PaginatedResponse<Notice>> {
+    const qs = category ? `?category=${encodeURIComponent(category)}` : ''
+    return request<PaginatedResponse<Notice>>(`/notices${qs}`)
+  },
+
+  async get(id: number): Promise<Notice> {
+    const res = await request<{ data: Notice }>(`/notices/${id}`)
+    return res.data
+  },
+}
+
+// ── FAQs ──────────────────────────────────────────────────────────────────────
+
+export const faqApi = {
+  async list(): Promise<{ data: Record<string, Faq[]>; categories: string[] }> {
+    return request<{ data: Record<string, Faq[]>; categories: string[] }>('/faqs')
   },
 }
 

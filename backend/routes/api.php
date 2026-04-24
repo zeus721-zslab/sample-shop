@@ -3,7 +3,9 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\FaqController;
 use App\Http\Controllers\MyController;
+use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
@@ -45,6 +47,12 @@ Route::get('/products/{productId}/reviews', [ReviewController::class, 'index']);
 // ── 검색 ──────────────────────────────────────────────────────────────────────
 
 Route::get('/search', [SearchController::class, 'index']);
+
+// ── 공지사항 / FAQ ────────────────────────────────────────────────────────────
+
+Route::get('/notices',       [NoticeController::class, 'index']);
+Route::get('/notices/{notice}', [NoticeController::class, 'show']);
+Route::get('/faqs',          [FaqController::class, 'index']);
 
 // ── Authenticated ─────────────────────────────────────────────────────────────
 

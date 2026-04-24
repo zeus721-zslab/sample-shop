@@ -3,7 +3,9 @@
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\MemberController;
+use App\Http\Controllers\Admin\NoticeController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use Illuminate\Support\Facades\Route;
@@ -44,5 +46,21 @@ Route::prefix('zslab-manage')->name('admin.')->group(function () {
         Route::post('/categories',              [CategoryController::class, 'store'])->name('categories.store');
         Route::put('/categories/{category}',    [CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+        // 공지사항 관리
+        Route::get('/notices',              [NoticeController::class, 'index'])->name('notices.index');
+        Route::get('/notices/create',       [NoticeController::class, 'create'])->name('notices.create');
+        Route::post('/notices',             [NoticeController::class, 'store'])->name('notices.store');
+        Route::get('/notices/{notice}/edit', [NoticeController::class, 'edit'])->name('notices.edit');
+        Route::put('/notices/{notice}',     [NoticeController::class, 'update'])->name('notices.update');
+        Route::delete('/notices/{notice}',  [NoticeController::class, 'destroy'])->name('notices.destroy');
+
+        // FAQ 관리
+        Route::get('/faqs',              [FaqController::class, 'index'])->name('faqs.index');
+        Route::get('/faqs/create',       [FaqController::class, 'create'])->name('faqs.create');
+        Route::post('/faqs',             [FaqController::class, 'store'])->name('faqs.store');
+        Route::get('/faqs/{faq}/edit',   [FaqController::class, 'edit'])->name('faqs.edit');
+        Route::put('/faqs/{faq}',        [FaqController::class, 'update'])->name('faqs.update');
+        Route::delete('/faqs/{faq}',     [FaqController::class, 'destroy'])->name('faqs.destroy');
     });
 });

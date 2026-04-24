@@ -36,15 +36,15 @@ const FOOTER_LINKS = {
     { label: '전자제품', href: '/products?category=electronics' },
   ],
   '고객센터': [
-    { label: '공지사항', href: '#' },
-    { label: '자주 묻는 질문', href: '#' },
+    { label: '공지사항', href: '/notice' },
+    { label: '자주 묻는 질문', href: '/faq' },
     { label: '1:1 문의', href: '#' },
-    { label: '배송 안내', href: '#' },
+    { label: '배송 안내', href: '/shipping' },
   ],
   '회사': [
-    { label: '브랜드 소개', href: '#' },
-    { label: '이용약관', href: '#' },
-    { label: '개인정보처리방침', href: '#' },
+    { label: '브랜드 소개', href: '/about' },
+    { label: '이용약관', href: '/terms' },
+    { label: '개인정보처리방침', href: '/privacy' },
   ],
 }
 

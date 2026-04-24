@@ -118,3 +118,23 @@ export interface PaginatedResponse<T> {
   per_page: number
   total: number
 }
+
+export interface Notice {
+  id: number
+  title: string
+  content: string
+  category: string
+  is_pinned: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface Faq {
+  id: number
+  question: string
+  answer: string
+  category: string
+  sort_order: number
+  created_at: string
+  updated_at: string
+}

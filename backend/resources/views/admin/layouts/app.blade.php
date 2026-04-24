@@ -93,6 +93,20 @@
               <p>카테고리 관리</p>
             </a>
           </li>
+          <li class="nav-item">
+            <a href="{{ route('admin.notices.index') }}"
+               class="nav-link {{ request()->routeIs('admin.notices.*') ? 'active' : '' }}">
+              <i class="nav-icon bi bi-megaphone"></i>
+              <p>공지사항 관리</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ route('admin.faqs.index') }}"
+               class="nav-link {{ request()->routeIs('admin.faqs.*') ? 'active' : '' }}">
+              <i class="nav-icon bi bi-question-circle"></i>
+              <p>FAQ 관리</p>
+            </a>
+          </li>
         </ul>
       </nav>
     </div>

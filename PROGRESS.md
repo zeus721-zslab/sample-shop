@@ -433,6 +433,37 @@ curl https://api.zslab-shop.duckdns.org/api/health
 
 **검증:** 빌드 성공 ✓ / 전 페이지 200 ✓
 
+## 완료된 작업 (푸터 메뉴 페이지 구성)
+
+### STEP 49: 공지사항/FAQ/정적 페이지 구현 (2026-04-24)
+
+**Backend:**
+- DB 마이그레이션: notices, faqs 테이블 생성 ✓
+- Model: Notice, Faq ✓
+- Seeder: 공지사항 6개, FAQ 카테고리별 4개 (총 16개) ✓
+- API: GET /api/notices, GET /api/notices/{id}, GET /api/faqs ✓
+- 관리자 Controller: Admin\NoticeController, Admin\FaqController (CRUD) ✓
+- 관리자 Views: notices/{index,create,edit,_form}, faqs/{index,create,edit,_form} ✓
+- 사이드바: 공지사항/FAQ 관리 메뉴 추가 ✓
+
+**Frontend:**
+- Types: Notice, Faq 추가 ✓
+- API: noticeApi, faqApi 추가 ✓
+- /notice — 공지사항 목록 (핀고정 강조, 카테고리 뱃지) ✓
+- /notice/[id] — 공지사항 상세 (잡지 아티클 레이아웃) ✓
+- /faq — 카테고리 탭 + Framer Motion 아코디언 ✓
+- /shipping — 배송 정책 카드 그리드 + 스텝 다이어그램 ✓
+- /about — 히어로 + 브랜드 스토리 + 핵심 가치 + 카운트업 애니메이션 ✓
+- /terms, /privacy — 준비 중 페이지 (아이콘 + hover 애니메이션) ✓
+- Footer 링크 실제 경로로 업데이트 ✓
+
+**검증:**
+- GET /api/notices → 200 (공지 6건) ✓
+- GET /api/notices/1 → 200 ✓
+- GET /api/faqs → 200 (카테고리별 그룹 반환) ✓
+- 7개 프론트엔드 페이지 모두 HTTP 200 ✓
+- 관리자 /zslab-manage/notices, /zslab-manage/faqs → 200 ✓
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
