@@ -17,7 +17,16 @@
         <dl class="row mb-0">
           <dt class="col-4 text-muted">주문번호</dt><dd class="col-8">{{ $order->order_number }}</dd>
           <dt class="col-4 text-muted">주문자</dt><dd class="col-8">{{ $order->user->name ?? '-' }} ({{ $order->user->email ?? '-' }})</dd>
-          <dt class="col-4 text-muted">결제금액</dt><dd class="col-8 fw-semibold">{{ number_format($order->paid_amount) }}원</dd>
+          <dt class="col-4 text-muted">상품 금액</dt><dd class="col-8">{{ number_format($order->total_amount) }}원</dd>
+          @if($order->coupon_code)
+          <dt class="col-4 text-muted">쿠폰 코드</dt>
+          <dd class="col-8">
+            <code class="fw-bold">{{ $order->coupon_code }}</code>
+            <span class="ms-2 text-danger fw-semibold">-{{ number_format($order->discount_amount) }}원</span>
+          </dd>
+          @endif
+          <dt class="col-4 text-muted">최종 결제금액</dt><dd class="col-8 fw-semibold text-dark">{{ number_format($order->final_amount) }}원</dd>
+          <dt class="col-4 text-muted">실 결제금액</dt><dd class="col-8 fw-bold text-success">{{ number_format($order->paid_amount) }}원</dd>
           <dt class="col-4 text-muted">결제방법</dt><dd class="col-8">{{ $order->payment_method ?? '-' }}</dd>
           <dt class="col-4 text-muted">결제일시</dt><dd class="col-8">{{ $order->paid_at?->format('Y.m.d H:i') ?? '-' }}</dd>
           <dt class="col-4 text-muted">주문일시</dt><dd class="col-8">{{ $order->created_at->format('Y.m.d H:i') }}</dd>
