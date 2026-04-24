@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaqController;
+use App\Http\Controllers\Admin\InquiryController;
 use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\NoticeController;
 use App\Http\Controllers\Admin\OrderController;
@@ -62,5 +63,11 @@ Route::prefix('zslab-manage')->name('admin.')->group(function () {
         Route::get('/faqs/{faq}/edit',   [FaqController::class, 'edit'])->name('faqs.edit');
         Route::put('/faqs/{faq}',        [FaqController::class, 'update'])->name('faqs.update');
         Route::delete('/faqs/{faq}',     [FaqController::class, 'destroy'])->name('faqs.destroy');
+
+        // 1:1 문의 관리
+        Route::get('/inquiries', [InquiryController::class, 'index'])->name('inquiries.index');
     });
 });
+
+// ── 1:1 문의 (별도 미들웨어 그룹 없이 zslab-manage prefix 내 추가) ──────────────
+// 위 Route::prefix('zslab-manage') 블록 외부에서 직접 추가

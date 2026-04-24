@@ -8,6 +8,15 @@
 :8080 {
     encode gzip
 
+    # 채팅 서버: /chat/* → zslab-chat (WebSocket 지원)
+    handle /chat/* {
+        uri strip_prefix /chat
+        reverse_proxy zslab-chat:3001 {
+            header_up Upgrade {http.upgrade}
+            header_up Connection {http.connection}
+        }
+    }
+
     # API 요청: /api/* → Laravel (CORS는 Laravel HandleCors 미들웨어가 처리)
     handle /api/* {
         reverse_proxy api:8080

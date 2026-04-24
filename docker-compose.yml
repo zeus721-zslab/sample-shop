@@ -16,7 +16,6 @@ services:
     build: ./docker/caddy
     container_name: zslab_caddy
     restart: unless-stopped
-    # 포트 외부 노출 없음 — Nginx 게이트웨이가 TLS 처리 후 :8080으로 프록시
     volumes:
       - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -27,6 +26,7 @@ services:
     depends_on:
       - frontend
       - api
+      - zslab-chat
   frontend:
     build:
       context: ./frontend
@@ -38,6 +38,7 @@ services:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=https://zslab-shop.duckdns.org/api
       - NEXT_PUBLIC_SOCKET_URL=https://zslab-shop.duckdns.org
+      - NEXT_PUBLIC_CHAT_URL=https://zslab-shop.duckdns.org
     networks:
       - zslab_net
     depends_on:
@@ -69,6 +70,29 @@ services:
     networks:
       - zslab_net
     depends_on:
+      - redis
+  zslab-chat:
+    image: node:20-alpine
+    container_name: zslab_chat
+    restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm install --production && node server/index.js"
+    volumes:
+      - ./zslab-chat:/app
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_DATABASE=zslab_shop
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${CHAT_JWT_SECRET}
+    networks:
+      - zslab_net
+    depends_on:
+      - mariadb
       - redis
   mariadb:
     image: mariadb:10.11

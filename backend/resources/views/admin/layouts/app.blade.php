@@ -107,6 +107,13 @@
               <p>FAQ 관리</p>
             </a>
           </li>
+          <li class="nav-item">
+            <a href="{{ route('admin.inquiries.index') }}"
+               class="nav-link {{ request()->routeIs('admin.inquiries.*') ? 'active' : '' }}">
+              <i class="nav-icon bi bi-chat-dots"></i>
+              <p>1:1 문의</p>
+            </a>
+          </li>
         </ul>
       </nav>
     </div>

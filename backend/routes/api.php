@@ -98,3 +98,12 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum', 'shop.mode:marketplace'])->group(function () {
     // Route::apiResource('/sellers', SellerController::class);
 });
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
+
+Route::middleware('auth:sanctum')->prefix('chat')->group(function () {
+    Route::post('/token',   [\App\Http\Controllers\ChatController::class, 'token']);
+    Route::post('/rooms',   [\App\Http\Controllers\ChatController::class, 'findOrCreateRoom']);
+    Route::get('/rooms/{id}/messages', [\App\Http\Controllers\ChatController::class, 'messages']);
+    Route::get('/unread',   [\App\Http\Controllers\ChatController::class, 'unreadCount']);
+});

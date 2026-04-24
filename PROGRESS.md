@@ -464,6 +464,56 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - 7개 프론트엔드 페이지 모두 HTTP 200 ✓
 - 관리자 /zslab-manage/notices, /zslab-manage/faqs → 200 ✓
 
+## 완료된 작업 (zslab-chat 쇼핑몰 연동)
+
+### STEP 50: zslab-chat 실시간 1:1 문의 채팅 연동 (2026-04-24)
+
+**인프라:**
+- `docker-compose.yml`: zslab-chat 서비스 추가 (node:20-alpine, port 3001, zslab_net)
+  - 볼륨: `./zslab-chat:/app` (로컬 채팅 서버 소스)
+  - 환경변수: DB_HOST/PORT/DATABASE/USERNAME/PASSWORD, REDIS_URL, JWT_SECRET
+- `docker/caddy/Caddyfile`: `/chat/*` → zslab-chat:3001 WebSocket 프록시 추가
+
+**채팅 서버 (`./zslab-chat/`):**
+- `package.json`: socket.io, express, mysql2, ioredis, jsonwebtoken
+- `server/index.js`: Socket.io 서버
+  - JWT 인증 미들웨어 (HS256)
+  - 이벤트: join_room / send_message / mark_read / typing_start / typing_stop
+  - Redis pub/sub 브로드캐스트 (다중 인스턴스 대비)
+  - DB: MariaDB (chat_rooms, chat_participants, chat_messages)
+  - 헬스체크: GET /health
+
+**DB 마이그레이션:**
+- `2026_04_24_000010_create_chat_tables.php`: chat_rooms, chat_participants, chat_messages 테이블
+
+**Backend API (Laravel):**
+- `ChatController.php`: token / findOrCreateRoom / messages / unreadCount
+- `config/chat.php`: CHAT_JWT_SECRET 환경변수 바인딩
+- `routes/api.php`: POST /api/chat/token, POST /api/chat/rooms, GET /api/chat/rooms/{id}/messages, GET /api/chat/unread
+
+**Frontend (Next.js):**
+- `frontend/package.json`: socket.io-client ^4.7.5 추가
+- `src/hooks/useChat.ts`: Socket.io 훅 (연결/메시지/타이핑/읽음 처리)
+- `src/components/chat/ChatWidget.tsx`: 우하단 고정 채팅 버튼 + 미읽음 뱃지
+- `src/components/chat/ChatWindow.tsx`: 채팅창 UI (말풍선, 타이핑 인디케이터)
+- `src/app/layout.tsx`: `<ChatWidget />` 추가 (로그인 유저만 표시)
+
+**관리자 패널 (AdminLTE):**
+- `Admin\InquiryController.php`: 문의 목록 + 관리자 JWT 발급
+- `resources/views/admin/inquiries/index.blade.php`: 실시간 채팅 관리 패널
+  - 문의 목록 사이드바 (미읽음 뱃지, 마지막 메시지 미리보기)
+  - 관리자 채팅 영역 (Socket.io CDN 직접 연결)
+  - 읽음 처리 관리자에게만 표시
+- `routes/admin.php`: GET /zslab-manage/inquiries 라우트
+- `admin/layouts/app.blade.php`: 사이드바 1:1 문의 메뉴 추가
+
+**검증:**
+- GET /api/health → {"status":"ok"} ✓
+- GET /chat/health → {"status":"ok","service":"zslab-chat"} ✓
+- zslab_chat 컨테이너 Up (MariaDB+Redis 연결 ✓)
+- https://zslab-shop.duckdns.org/ → 200 ✓ (ChatWidget 포함)
+- https://zslab-shop.duckdns.org/zslab-manage/inquiries → 200 ✓
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
