@@ -833,7 +833,12 @@ curl https://api.zslab-shop.duckdns.org/api/health
 **해당 주문 보정 (ORD-20260424-UQZLZXMB, order_id=10):**
 - `delivered_at` NULL → `now()` 수동 보정
 - 사용자 grade = newbie (point_rate 0%) → 적립금 0P (설계 정상)
-- Silver(1.5%) 등급 검증: 19,800 × 1.5% = 297P 정상 계산 확인
+- Silver(1.5%) 등급 검증: 19,800 × 1.5% = 297P + point_history 1건 생성 확인
+
+**추가 수정 - 고아 포인트 정리:**
+- 검증 스크립트 롤백 버그: `$user->update(['points'=>0])` 모델 캐시로 DB 미반영 → 297P 잔존, 이력 0건 불일치
+- `DB::table('users')->update(['points'=>0])` 로 직접 초기화, order earned_points 및 histories 정리
+- 이후 관리자 패널 delivered 처리 → 이력 정상 생성 (type:earn, description:"[silver] 주문# 적립") 최종 확인
 
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
