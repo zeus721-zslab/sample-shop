@@ -626,6 +626,40 @@ curl https://api.zslab-shop.duckdns.org/api/health
 
 **브라우저 새로고침 필요**: 재연결 시 `connected = true`, 입력창 활성화됨
 
+## 미구현 기능 현황 (2026-04-25 코드 기반 점검)
+
+### 1. 멤버십 등급제 (Newbie/Silver/Gold/VIP)
+| 항목 | 상태 | 비고 |
+|------|------|------|
+| DB grade 컬럼 | ❌ 미구현 | users 테이블 migration에 grade/points 컬럼 없음 |
+| 등급 산정 로직 | ❌ 미구현 | 12개월 구매액 기반 산정 로직 없음 |
+| 적립금 % 적립 | ❌ 미구현 | OrderService에 포인트 적립 처리 없음 |
+| 마이페이지 등급 UI | ❌ 미구현 | /my 페이지에 등급 표시 없음 |
+
+### 2. 쿠폰 발행/관리
+| 항목 | 상태 | 비고 |
+|------|------|------|
+| DB 쿠폰 스키마 | ✅ 구현됨 | coupons + coupon_usages 테이블 존재 (fixed/percent 타입) |
+| 쿠폰 적용/차감 API | ⚠️ 부분구현 | OrderService에 `$discountAmount = 0; // TODO: 쿠폰 처리` — 항상 0 |
+| 체크아웃 쿠폰 입력창 | ⚠️ 부분구현 | UI + API 파라미터 전달은 되나 실제 할인 계산 안됨 |
+| 관리자 쿠폰 관리 UI | ❌ 미구현 | admin 라우트/뷰/Controller 없음 |
+
+### 3. ELK 통계 대시보드
+| 항목 | 상태 | 비고 |
+|------|------|------|
+| Elasticsearch | ✅ 구현됨 | docker-compose에 존재 (검색 전용 용도) |
+| Logstash / Kibana | ❌ 미구현 | docker-compose에 서비스 없음 |
+| Filebeat 로그 수집 | ❌ 미구현 | 설정 파일 없음 |
+| 관리자 통계 페이지 | ❌ 미구현 | 대시보드는 KPI 카드 하드코딩만 (DB 집계 없음) |
+
+### 4. 셀러 패널
+| 항목 | 상태 | 비고 |
+|------|------|------|
+| ShopMode 미들웨어 | ✅ 구현됨 | marketplace 모드 아닌 경우 404 반환 로직 존재 |
+| 셀러 라우트 활성화 | ❌ 미구현 | api.php에 `// Route::apiResource('/sellers', ...)` 주석 처리 |
+| 셀러 입점/승인 API | ❌ 미구현 | SellerController 없음 |
+| 셀러 패널 UI | ❌ 미구현 | /seller/* 페이지 없음 |
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
