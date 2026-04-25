@@ -350,7 +350,7 @@ curl https://api.zslab-shop.duckdns.org/api/health
 
 ### STEP 46: 관리자 패널 (AdminLTE 4 기반)
 - URL: https://zslab-shop.duckdns.org/zslab-manage/
-- 로그인: admin@zslab.com / zslab@admin2026!
+- 로그인: admin@zslab.com / [비밀번호는 .env 참고]
 
 **백엔드 (Laravel Web 세션 기반):**
 - `routes/admin.php` — 21개 라우트 (`zslab-manage` prefix)
@@ -941,13 +941,12 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 - 핵심: proxy_pass 변수 사용 시 prefix 제거 안됨 → 리터럴 URL 사용
 
 **GlitchTip 조직/프로젝트/DSN:**
-- 관리자: admin@zslab.com / zslab@admin2026!
+- 관리자: admin@zslab.com / [비밀번호는 변경 필요]
 - 조직: zslab
-- Backend 프로젝트 (ID:1): php-laravel, DSN key: c54c7d27-af2a-47f8-b719-debcd4db752d
-  - 내부 DSN: `http://c54c7d27-...@glitchtip_web:8000/1`
-  - 외부 DSN: `https://c54c7d27-...@zslab-shop.duckdns.org/errors/1`
-- Frontend 프로젝트 (ID:2): javascript-nextjs, DSN key: 8028915d-70e5-4aa0-88e9-e86350630084
-  - 외부 DSN: `https://8028915d-...@zslab-shop.duckdns.org/errors/2`
+- Backend 프로젝트 (ID:1): php-laravel
+  - DSN: GlitchTip UI > Settings > Projects > php-laravel > Client Keys
+- Frontend 프로젝트 (ID:2): javascript-nextjs
+  - DSN: GlitchTip UI > Settings > Projects > javascript-nextjs > Client Keys
 
 **Laravel (backend):**
 - `sentry/sentry-laravel ^4.25` 설치
@@ -973,7 +972,7 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 
 **접근 URL:**
 - GlitchTip UI: `https://zslab-shop.duckdns.org/errors/`
-- 로그인: admin@zslab.com / zslab@admin2026!
+- 로그인: admin@zslab.com / [비밀번호는 변경 필요]
 
 ---
 
