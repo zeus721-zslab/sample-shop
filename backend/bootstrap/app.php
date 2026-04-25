@@ -31,10 +31,4 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // GlitchTip (Sentry 호환) 에러 리포팅
-        $exceptions->report(function (\Throwable $e) {
-            if (app()->bound('sentry') && $e instanceof \Exception) {
-                \Sentry\captureException($e);
-            }
-        });
     })->create();

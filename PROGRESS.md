@@ -990,6 +990,15 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
 - 소셜 로그인 (Google/Kakao) 실제 연동
 
+### STEP 66: GlitchTip 완전 삭제 (2026-04-26)
+- [x] STEP 66-1: GlitchTip docker compose down -v (컨테이너/볼륨/네트워크 전체 제거)
+- [x] STEP 66-2: /home/glitchtip/ 디렉토리 삭제
+- [x] STEP 66-3: Nginx /errors/, /static/, /media/, /_allauth/ location 블록 제거 + 컨테이너 재시작
+- [x] STEP 66-4: Laravel .env SENTRY_LARAVEL_DSN 제거
+- [x] STEP 66-5: Next.js .env.production SENTRY DSN 2개 제거, docker-compose.yml SENTRY 환경변수 제거
+- [x] STEP 66-6: sentry.php / instrumentation.ts / SentryInit.tsx 삭제, providers.php / app.php / layout.tsx 정리
+- [x] STEP 66-7: GitHub push
+
 ## 완료된 작업 (2026-04-26)
 
 ### STEP 65: GlitchTip 로그아웃 리다이렉트 조사
