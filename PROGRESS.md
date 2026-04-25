@@ -1,5 +1,15 @@
 # zslab shop — 작업 진행 현황
 
+---
+## 작업 방식 (고정)
+- 작업 시작 전 스텝 목록 먼저 PROGRESS.md에 기록
+- 각 스텝 완료 시마다 즉시 [x] 업데이트
+- 스텝 형식:
+  - [ ] STEP N: 작업 내용 (시작 전)
+  - [x] STEP N: 작업 내용 (완료 후)
+- 전체 완료 후 요약 보고
+---
+
 ## 완료된 STEP
 - [x] STEP 1: PROGRESS.md 생성 및 초기화
 - [x] STEP 2: 디렉토리 구조 생성
@@ -979,6 +989,18 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 ## 다음 작업
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
 - 소셜 로그인 (Google/Kakao) 실제 연동
+
+## 완료된 작업 (2026-04-26)
+
+### STEP 65: GlitchTip 로그아웃 리다이렉트 조사
+- [x] STEP 65-1: 로그아웃 리다이렉트 상태 점검 → 이미 정상 작동 확인
+  - Nginx sub_filter가 `window.location.href="/login"` → `window.location.href="/errors/login"` 치환 중 ✓
+  - 서빙되는 JS 번들(`/static/main-5NRHEHB2.js`) 내 `/errors/login` 확인 ✓
+  - base href=`/errors/` HTML 치환도 정상 ✓
+  - JS `max-age=86400` 캐시 (upstream 설정) → 24h 이후 만료로 자연 해소
+- [ ] STEP 65-2: /errors/login 브라우저 경고 원인 조사 — **보류**
+  - 기술적 점검 결과: cert 유효(Let's Encrypt, 만료 2026-07-24), HTTP→HTTPS 301 ✓, mixed content 없음 ✓
+  - 브라우저/환경별 문제로 추가 조사 필요 (보류)
 
 ---
 
