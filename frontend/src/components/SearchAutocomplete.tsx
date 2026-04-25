@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface Suggestion {
@@ -29,7 +28,6 @@ export default function SearchAutocomplete({
   placeholder = '상품 검색',
   inputClassName = '',
 }: Props) {
-  const router = useRouter()
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [open, setOpen] = useState(false)
   const [activeIdx, setActiveIdx] = useState(-1)
