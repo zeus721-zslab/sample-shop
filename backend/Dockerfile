@@ -33,8 +33,7 @@ COPY --from=build /app /app
 RUN rm -f bootstrap/cache/packages.php bootstrap/cache/services.php \
     && php artisan package:discover --ansi \
     && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+    && php artisan route:cache
 
 EXPOSE 8080
 CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
