@@ -919,6 +919,64 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 → docker exec gateway_nginx nginx -s reload (무중단)
 ```
 
+
+## 완료된 작업 (GlitchTip 에러 트래킹)
+
+### STEP 64: GlitchTip 셀프호스팅 + 에러 트래킹 연동 (2026-04-25)
+
+**인프라 (`/home/glitchtip/docker-compose.yml`):**
+- `glitchtip_pg`: Postgres 14-alpine (전용 DB)
+- `glitchtip_redis`: Redis 7-alpine (전용 캐시/큐)
+- `glitchtip_web`: glitchtip/glitchtip:latest (granian WSGI, 8000)
+  - 네트워크: glitchtip_net + gateway_net + zslab_zslab_net
+  - ALLOWED_HOSTS=* (내부 호출용)
+- `glitchtip_worker`: Celery 비동기 이벤트 처리
+- `REDIS_URL` / `CELERY_BROKER_URL` = redis://glitchtip-redis:6379/0
+- `GLITCHTIP_DOMAIN` = https://zslab-shop.duckdns.org/errors
+
+**Nginx (`/home/gateway/nginx/nginx.conf`):**
+- `location /errors/` → `proxy_pass http://glitchtip_web:8000/;` (prefix 제거, 리터럴 URL)
+- `location /static/` → `proxy_pass http://glitchtip_web:8000/static/;` (SPA 정적파일)
+- `location /media/` → `proxy_pass http://glitchtip_web:8000/media/;`
+- 핵심: proxy_pass 변수 사용 시 prefix 제거 안됨 → 리터럴 URL 사용
+
+**GlitchTip 조직/프로젝트/DSN:**
+- 관리자: admin@zslab.com / zslab@admin2026!
+- 조직: zslab
+- Backend 프로젝트 (ID:1): php-laravel, DSN key: c54c7d27-af2a-47f8-b719-debcd4db752d
+  - 내부 DSN: `http://c54c7d27-...@glitchtip_web:8000/1`
+  - 외부 DSN: `https://c54c7d27-...@zslab-shop.duckdns.org/errors/1`
+- Frontend 프로젝트 (ID:2): javascript-nextjs, DSN key: 8028915d-70e5-4aa0-88e9-e86350630084
+  - 외부 DSN: `https://8028915d-...@zslab-shop.duckdns.org/errors/2`
+
+**Laravel (backend):**
+- `sentry/sentry-laravel ^4.25` 설치
+- `config/sentry.php` 신규 생성
+- `bootstrap/providers.php`: `Sentry\Laravel\ServiceProvider::class` 추가
+- `bootstrap/app.php`: `Sentry\captureException()` 예외 리포팅 추가
+- `.env`: `SENTRY_LARAVEL_DSN=http://...@glitchtip_web:8000/1` (내부 URL)
+- `php artisan sentry:test` → "Test event sent with ID: ..." ✓
+
+**Next.js (frontend):**
+- `@sentry/nextjs ^8` 설치 (`--legacy-peer-deps`, Next.js 16 호환)
+- `src/instrumentation.ts`: 서버/엣지 런타임 Sentry 초기화 (`onRequestError` 핸들러)
+- `src/components/SentryInit.tsx`: 클라이언트 사이드 동적 초기화 (use client)
+- `.env.production`: `NEXT_PUBLIC_SENTRY_DSN` + `SENTRY_DSN` 추가
+- `withSentryConfig` 미사용 (Next.js 16 미지원) → 수동 초기화 방식
+
+**검증:**
+- `POST /errors/api/1/store/` via Nginx → `{"event_id": "...", "task_id": null}` HTTP 200 ✓
+- `php artisan sentry:test` → GlitchTip DB에 Issue 수집 확인 ✓
+- GlitchTip 총 이슈: 3개 (LaravelException, TestException, 공식 테스트) ✓
+- https://zslab-shop.duckdns.org/ → HTTP 200 ✓
+- https://zslab-shop.duckdns.org/errors/ → HTTP 200 (GlitchTip UI) ✓
+
+**접근 URL:**
+- GlitchTip UI: `https://zslab-shop.duckdns.org/errors/`
+- 로그인: admin@zslab.com / zslab@admin2026!
+
+---
+
 ## 다음 작업
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
 - 소셜 로그인 (Google/Kakao) 실제 연동
@@ -935,11 +993,11 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 - [x] STEP 63-3: 프론트엔드 자동완성 UI (debounce + 드롭다운 + 키보드 이동)
 
 ### STEP 64: GlitchTip 셀프호스팅 + 에러 트래킹 연동
-- [ ] STEP 64-1: /home/glitchtip/ Docker Compose 설치 + Nginx 연결
-- [ ] STEP 64-2: 관리자 계정 + 프로젝트 2개 생성 (backend/frontend DSN 발급)
-- [ ] STEP 64-3: Laravel sentry/sentry-laravel 패키지 설치 + .env 설정
-- [ ] STEP 64-4: Next.js @sentry/nextjs 패키지 설치 + 설정 파일
-- [ ] STEP 64-5: 테스트 에러 발생 → GlitchTip 대시보드 수집 확인
+- [x] STEP 64-1: /home/glitchtip/ Docker Compose 설치 + Nginx 연결
+- [x] STEP 64-2: 관리자 계정 + 프로젝트 2개 생성 (backend/frontend DSN 발급)
+- [x] STEP 64-3: Laravel sentry/sentry-laravel 패키지 설치 + .env 설정
+- [x] STEP 64-4: Next.js @sentry/nextjs 패키지 설치 + 설정 파일
+- [x] STEP 64-5: 테스트 에러 발생 → GlitchTip 대시보드 수집 확인
 
 ## 오류 기록
 - STEP 11 자동 실행 불가: zslab 계정이 docker 그룹에 미포함
