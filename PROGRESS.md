@@ -998,7 +998,14 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
   - 서빙되는 JS 번들(`/static/main-5NRHEHB2.js`) 내 `/errors/login` 확인 ✓
   - base href=`/errors/` HTML 치환도 정상 ✓
   - JS `max-age=86400` 캐시 (upstream 설정) → 24h 이후 만료로 자연 해소
-- [ ] STEP 65-2: /errors/login 브라우저 경고 원인 조사 — **보류**
+- [x] STEP 65-2: /_allauth/ Nginx 라우팅 추가 + 컨테이너 재시작
+  - Angular SPA가 `/_allauth/*` 절대경로로 API 호출 → Nginx에 location 블록 없어서 Next.js로 라우팅(404)됨
+  - `/home/gateway/nginx/nginx.conf`에 `location /_allauth/` → `glitchtip_web:8000` 추가
+  - 컨테이너 재시작으로 새 config 반영
+  - GET `/_allauth/browser/v1/auth/session` → 401 (GlitchTip 정상 응답) ✓
+  - DELETE `/_allauth/browser/v1/auth/session` → 403 (CSRF 없음, 정상) ✓
+  - https://zslab-shop.duckdns.org/ → 200 ✓
+- [ ] STEP 65-3: /errors/login 브라우저 경고 원인 조사 — **보류**
   - 기술적 점검 결과: cert 유효(Let's Encrypt, 만료 2026-07-24), HTTP→HTTPS 301 ✓, mixed content 없음 ✓
   - 브라우저/환경별 문제로 추가 조사 필요 (보류)
 
