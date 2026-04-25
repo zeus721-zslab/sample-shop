@@ -878,8 +878,48 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - 원인: `brianium/paratest` 패키지 미설치로 CI 실패
 - 커밋: `fix: CI --parallel 옵션 제거` → main push 완료 ✓
 
+## 완료된 작업 (SSL 인증서 자동 갱신)
+
+### STEP 62: SSL 인증서 자동 갱신 설정 (2026-04-25)
+
+**구성 방식: certbot webroot + docker + crontab**
+
+**발급 결과:**
+- zslab.duckdns.org → 만료 2026-07-24 (VALID 89일) ✓
+- zslab-shop.duckdns.org → 만료 2026-07-24 (VALID 89일) ✓
+- zslab-stg.duckdns.org → 만료 2026-07-24 (VALID 89일) ✓
+
+**변경 파일:**
+- `/home/gateway/nginx/nginx.conf`: port 80에 `/.well-known/acme-challenge/` location 추가 (HTTP→HTTPS 리다이렉트 전 처리)
+- `/home/gateway/docker-compose.yml`: `./webroot:/var/www/certbot:ro` 볼륨 마운트 추가
+- `/home/gateway/webroot/`: certbot webroot 디렉토리 신규 생성
+- `/etc/letsencrypt/`: certbot 인증서 저장소 (3개 도메인)
+- `/etc/letsencrypt/renewal-hooks/deploy/update-nginx-certs.sh`: 갱신 후 자동 복사+Nginx 리로드 훅
+- `/home/zslab/scripts/certbot-renew.sh`: 갱신 전체 스크립트
+
+**crontab (root):**
+```
+0 3 1,15 * * /home/zslab/scripts/certbot-renew.sh >> /var/log/certbot-renew.log 2>&1
+```
+매월 1일, 15일 새벽 3시 실행 (만료 30일 이상 남으면 skip)
+
+**dry-run 결과:**
+```
+Congratulations, all simulated renewals succeeded:
+  /etc/letsencrypt/live/zslab-shop.duckdns.org/fullchain.pem (success)
+  /etc/letsencrypt/live/zslab-stg.duckdns.org-0001/fullchain.pem (success)
+  /etc/letsencrypt/live/zslab.duckdns.org/fullchain.pem (success)
+0 renew failure(s)
+```
+
+**갱신 플로우:**
+```
+cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
+→ /etc/letsencrypt/live/ 갱신 → /home/gateway/certs/ 복사
+→ docker exec gateway_nginx nginx -s reload (무중단)
+```
+
 ## 다음 작업
-- 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
 - 소셜 로그인 (Google/Kakao) 실제 연동
 
