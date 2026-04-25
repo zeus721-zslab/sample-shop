@@ -998,6 +998,9 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 - [x] STEP 64-3: Laravel sentry/sentry-laravel 패키지 설치 + .env 설정
 - [x] STEP 64-4: Next.js @sentry/nextjs 패키지 설치 + 설정 파일
 - [x] STEP 64-5: 테스트 에러 발생 → GlitchTip 대시보드 수집 확인
+- [x] STEP 64-6: GlitchTip UI 오류 수정 (CSP 인라인 스타일 차단, API 500 에러)
+  - Nginx `proxy_hide_header Content-Security-Policy;` 추가 → UI 정상 렌더링
+  - OrganizationUserRole role=30 → role=3 수정 → GET /errors/api/0/organizations/ 200
 
 ## 오류 기록
 - STEP 11 자동 실행 불가: zslab 계정이 docker 그룹에 미포함
