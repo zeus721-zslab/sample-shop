@@ -993,7 +993,7 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 ## 완료된 작업 (2026-04-26)
 
 ### STEP 65: GlitchTip 로그아웃 리다이렉트 조사
-- [x] STEP 65-1: 로그아웃 리다이렉트 상태 점검 → 이미 정상 작동 확인
+- [x] STEP 65-1: 로그아웃 리다이렉트 상태 점검 + Nginx 재로드 → 정상 작동 확인
   - Nginx sub_filter가 `window.location.href="/login"` → `window.location.href="/errors/login"` 치환 중 ✓
   - 서빙되는 JS 번들(`/static/main-5NRHEHB2.js`) 내 `/errors/login` 확인 ✓
   - base href=`/errors/` HTML 치환도 정상 ✓
