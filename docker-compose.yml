@@ -40,6 +40,8 @@ services:
       - NEXT_PUBLIC_API_URL=https://zslab-shop.duckdns.org/api
       - NEXT_PUBLIC_SOCKET_URL=https://zslab-shop.duckdns.org
       - NEXT_PUBLIC_CHAT_URL=https://zslab-shop.duckdns.org
+      - SENTRY_DSN=https://8028915d70e54aa088e9e86350630084@zslab-shop.duckdns.org/errors/2
+      - NEXT_PUBLIC_SENTRY_DSN=https://8028915d70e54aa088e9e86350630084@zslab-shop.duckdns.org/errors/2
     networks:
       - zslab_net
     depends_on:
