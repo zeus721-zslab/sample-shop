@@ -65,7 +65,7 @@ jobs:
           DB_DATABASE: zslab_test
           DB_USERNAME: zslab
           DB_PASSWORD: test
-        run: php artisan test --parallel
+        run: php artisan test
 
   # ── Next.js typecheck ─────────────────────────────────────────────
   frontend-typecheck:
