@@ -864,6 +864,13 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - Frontend: HTTP 200 ✓
 - Migration: add_missing_indexes 완료 ✓
 
+## 완료된 작업 (Dockerfile 수정)
+
+### STEP 61: Dockerfile view:cache 오류 수정 (2026-04-25)
+- `backend/Dockerfile:37`: `php artisan view:cache` 라인 제거
+- 원인: API 모드로 `resources/views` 미사용 → "View path not found" 빌드 오류
+- 커밋: `fix: Dockerfile view:cache 제거` → main push 완료 ✓
+
 ## 완료된 작업 (CI 수정)
 
 ### STEP 60: GitHub Actions CI 테스트 오류 수정 (2026-04-25)
