@@ -196,11 +196,12 @@ class OrderService
                         $productId = $item['product_id'];
                         $version   = $versions[$productId] ?? 0;
 
+                        $qty      = (int) $item['quantity'];
                         $affected = Product::where('id', $productId)
                             ->where('stock_version', $version)
-                            ->where('stock', '>=', $item['quantity'])
+                            ->where('stock', '>=', $qty)
                             ->update([
-                                'stock'         => DB::raw("stock - {$item['quantity']}"),
+                                'stock'         => DB::raw("stock - {$qty}"),
                                 'stock_version' => $version + 1,
                             ]);
 

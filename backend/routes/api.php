@@ -23,8 +23,8 @@ Route::get('/health', fn () => response()->json(['status' => 'ok', 'service' => 
 // ── Auth ───────────────────────────────────────────────────────────────────────
 
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login',    [AuthController::class, 'login']);
+    Route::middleware('throttle:10,1')->post('/register', [AuthController::class, 'register']);
+    Route::middleware('throttle:5,1')->post('/login',    [AuthController::class, 'login']);
 
     // 소셜 로그인 — 라우트만 설계, 실제 OAuth 연동 추후
     Route::get('/social/{provider}/redirect', [AuthController::class, 'socialRedirect']);

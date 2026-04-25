@@ -2,23 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\JwtService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ChatController extends Controller
 {
-    /**
-     * HS256 JWT 생성 (firebase/php-jwt 없이 직접 구현)
-     */
-    private function generateJwt(array $payload, string $secret): string
-    {
-        $header  = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
-        $payload = base64_encode(json_encode($payload));
-        $header  = rtrim(strtr($header, '+/', '-_'), '=');
-        $payload = rtrim(strtr($payload, '+/', '-_'), '=');
-        $sig     = rtrim(strtr(base64_encode(hash_hmac('sha256', "$header.$payload", $secret, true)), '+/', '-_'), '=');
-        return "$header.$payload.$sig";
-    }
+    public function __construct(private JwtService $jwt) {}
 
     /**
      * 채팅 소켓 토큰 발급 (로그인 사용자 전용)
@@ -28,12 +18,7 @@ class ChatController extends Controller
         $user   = $request->user();
         $secret = config('chat.jwt_secret');
 
-        $token = $this->generateJwt([
-            'userId'   => (string) $user->id,
-            'userType' => 'user',
-            'iat'      => time(),
-            'exp'      => time() + 7 * 24 * 3600,
-        ], $secret);
+        $token = $this->jwt->userChatToken((string) $user->id, $secret);
 
         return response()->json(['token' => $token]);
     }

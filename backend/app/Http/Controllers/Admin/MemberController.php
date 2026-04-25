@@ -43,32 +43,43 @@ class MemberController extends Controller
             'description' => 'required|string|max:200',
         ]);
 
-        DB::transaction(function () use ($user, $validated) {
-            if ($validated['type'] === 'earn') {
-                $user->increment('points', $validated['amount']);
-            } else {
-                if ($user->points < $validated['amount']) {
-                    throw new \RuntimeException('적립금이 부족합니다.');
+        try {
+            DB::transaction(function () use ($user, $validated) {
+                if ($validated['type'] === 'earn') {
+                    $user->increment('points', $validated['amount']);
+                } else {
+                    if ($user->points < $validated['amount']) {
+                        throw new \RuntimeException('적립금이 부족합니다.');
+                    }
+                    $user->decrement('points', $validated['amount']);
                 }
-                $user->decrement('points', $validated['amount']);
-            }
 
-            PointHistory::create([
-                'user_id'     => $user->id,
-                'type'        => $validated['type'],
-                'amount'      => $validated['amount'],
-                'description' => '[관리자] ' . $validated['description'],
-                'created_at'  => now(),
-            ]);
-        });
+                PointHistory::create([
+                    'user_id'     => $user->id,
+                    'type'        => $validated['type'],
+                    'amount'      => $validated['amount'],
+                    'description' => '[관리자] ' . $validated['description'],
+                    'created_at'  => now(),
+                ]);
+            });
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', '적립금이 조정되었습니다.');
     }
 
     public function toggle(User $user)
     {
-        $user->update(['is_active' => !$user->is_active]);
-        $msg = $user->is_active ? '계정이 활성화되었습니다.' : '계정이 정지되었습니다.';
+        $newActive = !$user->is_active;
+        $user->update(['is_active' => $newActive]);
+
+        // 계정 정지 시 기존 Sanctum 토큰 전체 폐기
+        if (! $newActive) {
+            $user->tokens()->delete();
+        }
+
+        $msg = $newActive ? '계정이 활성화되었습니다.' : '계정이 정지되었습니다.';
         return back()->with('success', $msg);
     }
 }

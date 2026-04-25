@@ -27,6 +27,12 @@ class OrderController extends Controller
     {
         $order = Order::where('id', $id)
             ->where('user_id', $request->user()->id)
+            ->select([
+                'id', 'order_number', 'status', 'total_amount', 'discount_amount',
+                'final_amount', 'shipping_fee', 'paid_amount', 'coupon_code',
+                'payment_method', 'shipping_address', 'memo',
+                'paid_at', 'shipped_at', 'delivered_at', 'created_at',
+            ])
             ->with('items')
             ->firstOrFail();
 
@@ -95,12 +101,20 @@ class OrderController extends Controller
     /** PATCH /api/orders/{id}/status */
     public function updateStatus(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+
+        // 일반 고객은 shipping/delivered 변경 불가 (취소만 허용)
+        $adminOnly = ['shipping', 'delivered'];
         $validated = $request->validate([
             'status' => 'required|string|in:shipping,delivered,cancelled',
         ]);
 
+        if (in_array($validated['status'], $adminOnly) && ! in_array($user->role, ['admin', 'seller'])) {
+            return response()->json(['message' => '권한이 없습니다.'], 403);
+        }
+
         try {
-            $order = $this->orderService->updateStatus($id, $request->user()->id, $validated['status']);
+            $order = $this->orderService->updateStatus($id, $user->id, $validated['status']);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
             return response()->json(['message' => '주문을 찾을 수 없습니다.'], 404);
         } catch (\RuntimeException $e) {

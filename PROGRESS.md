@@ -840,6 +840,30 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - `DB::table('users')->update(['points'=>0])` 로 직접 초기화, order earned_points 및 histories 정리
 - 이후 관리자 패널 delivered 처리 → 이력 정상 생성 (type:earn, description:"[silver] 주문# 적립") 최종 확인
 
+## 완료된 작업 (코드 리뷰 보안/성능 수정)
+
+### STEP 59: 코드 리뷰 지적사항 수정 (2026-04-25)
+
+**🔴 높음**
+- Rate Limiting 추가: `POST /api/auth/login` (5회/분), `POST /api/auth/register` (10회/분), `POST /zslab-manage/login` (5회/분) — `throttle` 미들웨어 적용, 초과 시 429 반환 ✓
+- 일반 유저 배송 상태 변경 차단: `OrderController::updateStatus()` — shipping/delivered는 admin/seller만 가능, 403 반환 ✓
+- 정지 계정 로그인 차단: `AuthController::login()` + `Admin\AuthController::login()` — `is_active` 체크 후 403 반환 ✓
+- CartService N+1 쿼리 수정: `CartService::all()` — 루프 내 개별 `Product::find()` → `Product::whereIn()->get()->keyBy()` 일괄 조회로 변경 ✓
+
+**🟡 중간**
+- payment_raw 노출 제거: `OrderController::show()` — `select()` 로 민감 필드 제외 ✓
+- 정지 시 토큰 폐기: `MemberController::toggle()` — 계정 정지 시 `$user->tokens()->delete()` 호출 ✓
+- JWT 중복 구현 통합: `JwtService` 신규 생성 (`app/Services/JwtService.php`) — `ChatController`, `InquiryController`에서 공통 서비스 사용 ✓
+- 인덱스 추가: migration `2026_04_25_100001_add_missing_indexes` — orders.created_at, order_items.product_id, reviews.user_id, point_histories.user_id, chat_messages(room_id+sender_type+is_read) ✓
+- adjustPoints() 에러 핸들링: `MemberController::adjustPoints()` — try-catch 추가, 포인트 부족 시 flash error 반환 ✓
+- DB::raw 안전화: `OrderService::createWithOptimisticLock()` — `(int) $item['quantity']` 명시적 캐스팅 ✓
+
+**검증:**
+- Rate Limit: 로그인 6회 시도 → 5회 422, 6회째 429 ✓
+- API health: {"status":"ok"} ✓
+- Frontend: HTTP 200 ✓
+- Migration: add_missing_indexes 완료 ✓
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY

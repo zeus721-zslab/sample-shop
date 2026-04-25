@@ -22,28 +22,36 @@ class CartService
             return ['items' => [], 'count' => 0, 'subtotal' => 0];
         }
 
-        $items = [];
+        // N+1 방지: 상품 ID 한번에 수집 후 IN 쿼리로 일괄 조회
+        $decoded = [];
         foreach ($raw as $cartItemId => $json) {
-            $item = json_decode($json, true);
+            $decoded[$cartItemId] = json_decode($json, true);
+        }
 
-            // 상품 최신 정보 보완 (가격 변동 반영)
-            $product = Product::select('id', 'name', 'slug', 'price', 'sale_price', 'images', 'stock', 'status')
-                ->find($item['product_id']);
+        $productIds = array_unique(array_column(array_values($decoded), 'product_id'));
+        $products   = Product::select('id', 'name', 'slug', 'price', 'sale_price', 'images', 'stock', 'status')
+            ->whereIn('id', $productIds)
+            ->get()
+            ->keyBy('id');
+
+        $items = [];
+        foreach ($decoded as $cartItemId => $item) {
+            $product = $products->get($item['product_id']);
 
             if (! $product || $product->status === 'inactive') {
                 continue; // 삭제/비활성 상품 제외
             }
 
-            $item['cart_item_id']   = $cartItemId;
-            $item['name']           = $product->name;
-            $item['slug']           = $product->slug;
-            $item['price']          = $product->price;
-            $item['sale_price']     = $product->sale_price;
+            $item['cart_item_id']    = $cartItemId;
+            $item['name']            = $product->name;
+            $item['slug']            = $product->slug;
+            $item['price']           = $product->price;
+            $item['sale_price']      = $product->sale_price;
             $item['effective_price'] = $product->sale_price ?? $product->price;
-            $item['image']          = $product->images[0] ?? null;
-            $item['stock']          = $product->stock;
-            $item['is_soldout']     = $product->status === 'soldout';
-            $item['line_total']     = $item['effective_price'] * $item['quantity'];
+            $item['image']           = $product->images[0] ?? null;
+            $item['stock']           = $product->stock;
+            $item['is_soldout']      = $product->status === 'soldout';
+            $item['line_total']      = $item['effective_price'] * $item['quantity'];
 
             $items[] = $item;
         }

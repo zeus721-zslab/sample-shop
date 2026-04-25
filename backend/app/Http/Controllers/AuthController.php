@@ -67,6 +67,10 @@ class AuthController extends Controller
             ]);
         }
 
+        if (! $user->is_active) {
+            return response()->json(['message' => '정지된 계정입니다. 고객센터에 문의하세요.'], 403);
+        }
+
         // 기존 토큰 정리 (선택적 — 멀티 디바이스 허용 시 제거)
         // $user->tokens()->delete();
 

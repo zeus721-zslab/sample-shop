@@ -28,6 +28,10 @@ class AuthController extends Controller
                 Auth::logout();
                 return back()->withErrors(['email' => '관리자 권한이 없습니다.']);
             }
+            if (!Auth::user()->is_active) {
+                Auth::logout();
+                return back()->withErrors(['email' => '정지된 계정입니다.']);
+            }
             $request->session()->regenerate();
             return redirect()->intended(route('admin.dashboard'));
         }

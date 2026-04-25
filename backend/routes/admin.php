@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('zslab-manage')->name('admin.')->group(function () {
 
     Route::get('/login',  [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+    Route::middleware('throttle:5,1')->post('/login', [AuthController::class, 'login'])->name('login.post');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('admin.auth');
 
     // ── 인증 필요 영역 ──────────────────────────────────────────────────────

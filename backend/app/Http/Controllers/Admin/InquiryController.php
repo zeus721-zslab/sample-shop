@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\JwtService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class InquiryController extends Controller
 {
+    public function __construct(private JwtService $jwt) {}
     public function index()
     {
         $rooms = DB::table('chat_rooms as r')
@@ -32,24 +34,8 @@ class InquiryController extends Controller
             ->orderBy('last_message_at', 'desc')
             ->get();
 
-        $chatJwtSecret = config('chat.jwt_secret');
-        $adminToken = $this->generateAdminJwt($chatJwtSecret);
+        $adminToken = $this->jwt->adminChatToken(config('chat.jwt_secret'));
 
         return view('admin.inquiries.index', compact('rooms', 'adminToken'));
-    }
-
-    private function generateAdminJwt(string $secret): string
-    {
-        $header  = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
-        $payload = base64_encode(json_encode([
-            'userId'   => 'admin',
-            'userType' => 'admin',
-            'iat'      => time(),
-            'exp'      => time() + 3600,
-        ]));
-        $header  = rtrim(strtr($header, '+/', '-_'), '=');
-        $payload = rtrim(strtr($payload, '+/', '-_'), '=');
-        $sig     = rtrim(strtr(base64_encode(hash_hmac('sha256', "$header.$payload", $secret, true)), '+/', '-_'), '=');
-        return "$header.$payload.$sig";
     }
 }
