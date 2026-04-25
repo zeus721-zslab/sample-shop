@@ -100,6 +100,73 @@ class SearchService
         return $this->paginate($products, $total, $page, $perPage);
     }
 
+    /* ── 자동완성 (suggest) ─────────────────────────────────────────────── */
+
+    public function suggest(string $query, int $size = 5): array
+    {
+        try {
+            return $this->suggestEs($query, $size);
+        } catch (\Throwable $e) {
+            Log::warning('ES suggest unavailable, falling back to DB.', ['error' => $e->getMessage()]);
+            return $this->suggestDb($query, $size);
+        }
+    }
+
+    private function suggestEs(string $query, int $size): array
+    {
+        $body = [
+            'size'    => $size,
+            '_source' => ['id', 'name', 'slug', 'images'],
+            'query'   => [
+                'bool' => [
+                    'must'   => [[
+                        'multi_match' => [
+                            'query'  => $query,
+                            'type'   => 'bool_prefix',
+                            'fields' => [
+                                'name_suggest',
+                                'name_suggest._2gram',
+                                'name_suggest._3gram',
+                            ],
+                        ],
+                    ]],
+                    'filter' => [['term' => ['status' => 'active']]],
+                ],
+            ],
+            'sort' => [['_score' => 'desc'], ['order_count' => 'desc']],
+        ];
+
+        $response = Http::timeout(2)->post("{$this->host}/{$this->index}/_search", $body);
+
+        if ($response->failed()) {
+            throw new \RuntimeException('ES suggest failed: ' . $response->status());
+        }
+
+        return array_map(fn ($h) => [
+            'id'    => (int) $h['_id'],
+            'name'  => $h['_source']['name'],
+            'slug'  => $h['_source']['slug'],
+            'image' => $h['_source']['images'][0] ?? null,
+        ], $response->json()['hits']['hits'] ?? []);
+    }
+
+    private function suggestDb(string $query, int $size): array
+    {
+        return Product::where('status', 'active')
+            ->where('name', 'like', "%{$query}%")
+            ->orderByDesc('order_count')
+            ->limit($size)
+            ->get(['id', 'name', 'slug', 'images'])
+            ->map(fn ($p) => [
+                'id'    => $p->id,
+                'name'  => $p->name,
+                'slug'  => $p->slug,
+                'image' => $p->images[0] ?? null,
+            ])
+            ->values()
+            ->toArray();
+    }
+
     /* ── 인덱싱 ──────────────────────────────────────────────────────────── */
 
     public function indexProduct(Product $product): void
@@ -107,6 +174,7 @@ class SearchService
         $doc = [
             'id'            => $product->id,
             'name'          => $product->name,
+            'name_suggest'  => $product->name,   // search_as_you_type 필드
             'slug'          => $product->slug,
             'description'   => $product->description ?? '',
             'category_name' => $product->category?->name ?? '',
@@ -171,6 +239,7 @@ class SearchService
                 'properties' => [
                     'id'            => ['type' => 'integer'],
                     'name'          => ['type' => 'text', 'analyzer' => 'korean_ngram', 'search_analyzer' => 'korean_search'],
+                    'name_suggest'  => ['type' => 'search_as_you_type'],
                     'slug'          => ['type' => 'keyword'],
                     'description'   => ['type' => 'text', 'analyzer' => 'korean_ngram', 'search_analyzer' => 'korean_search'],
                     'category_name' => ['type' => 'text', 'analyzer' => 'korean_ngram', 'search_analyzer' => 'korean_search'],
@@ -183,6 +252,20 @@ class SearchService
                 ],
             ],
         ]);
+    }
+
+    /**
+     * 기존 인덱스에 name_suggest 필드 추가 (PUT mapping)
+     */
+    public function updateMapping(): bool
+    {
+        $response = Http::timeout(5)->put("{$this->host}/{$this->index}/_mapping", [
+            'properties' => [
+                'name_suggest' => ['type' => 'search_as_you_type'],
+            ],
+        ]);
+
+        return $response->successful();
     }
 
     /* ── 유틸 ────────────────────────────────────────────────────────────── */

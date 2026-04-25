@@ -923,6 +923,24 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
 - 소셜 로그인 (Google/Kakao) 실제 연동
 
+---
+
+## 진행 중인 작업 (2026-04-25)
+
+> 📌 작업 방식 변경: 작업 시작 전 스텝 먼저 기록, 완료 시마다 즉시 [x] 업데이트
+
+### STEP 63: 검색 자동완성
+- [x] STEP 63-1: ES 인덱스에 search_as_you_type 필드 추가 + 재인덱싱
+- [x] STEP 63-2: GET /api/search/suggest?q= 엔드포인트 추가
+- [x] STEP 63-3: 프론트엔드 자동완성 UI (debounce + 드롭다운 + 키보드 이동)
+
+### STEP 64: GlitchTip 셀프호스팅 + 에러 트래킹 연동
+- [ ] STEP 64-1: /home/glitchtip/ Docker Compose 설치 + Nginx 연결
+- [ ] STEP 64-2: 관리자 계정 + 프로젝트 2개 생성 (backend/frontend DSN 발급)
+- [ ] STEP 64-3: Laravel sentry/sentry-laravel 패키지 설치 + .env 설정
+- [ ] STEP 64-4: Next.js @sentry/nextjs 패키지 설치 + 설정 파일
+- [ ] STEP 64-5: 테스트 에러 발생 → GlitchTip 대시보드 수집 확인
+
 ## 오류 기록
 - STEP 11 자동 실행 불가: zslab 계정이 docker 그룹에 미포함
   → `usermod -aG docker zslab` 후 재로그인 필요

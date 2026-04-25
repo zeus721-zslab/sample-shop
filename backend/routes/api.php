@@ -49,7 +49,8 @@ Route::get('/products/{productId}/reviews', [ReviewController::class, 'index']);
 
 // ── 검색 ──────────────────────────────────────────────────────────────────────
 
-Route::get('/search', [SearchController::class, 'index']);
+Route::get('/search',         [SearchController::class, 'index']);
+Route::get('/search/suggest', [SearchController::class, 'suggest']);
 
 // ── 추천 (비로그인: 인기 상품, 로그인: 개인화) ───────────────────────────────
 // 토큰 있으면 개인화, 없으면 인기 상품 — 컨트롤러 내부에서 auth()->user() 처리

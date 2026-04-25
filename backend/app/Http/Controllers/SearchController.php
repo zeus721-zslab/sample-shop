@@ -27,4 +27,19 @@ class SearchController extends Controller
 
         return response()->json($result);
     }
+
+    /** GET /api/search/suggest?q=키워드 */
+    public function suggest(Request $request): JsonResponse
+    {
+        $request->validate([
+            'q' => 'required|string|min:1|max:50',
+        ]);
+
+        $suggestions = $this->search->suggest(
+            query: $request->string('q')->toString(),
+            size:  5,
+        );
+
+        return response()->json(['suggestions' => $suggestions]);
+    }
 }

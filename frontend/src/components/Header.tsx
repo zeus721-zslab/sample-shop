@@ -4,7 +4,8 @@ import { useAuth } from '@/store/auth'
 import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import SearchAutocomplete from './SearchAutocomplete'
 
 const NAV_ITEMS = [
   { label: '신상품', href: '/products?sort=latest' },
@@ -24,12 +25,6 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [scrolled, setScrolled] = useState(false)
-  const searchRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (searchOpen) searchRef.current?.focus()
-  }, [searchOpen])
-
   useEffect(() => {
     setSearchOpen(false)
   }, [pathname])
@@ -81,12 +76,16 @@ export default function Header() {
               <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
               </svg>
-              <input
-                ref={searchRef}
+              <SearchAutocomplete
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={setQuery}
+                onSearch={(q) => {
+                  router.push(`/search?q=${encodeURIComponent(q.trim())}`)
+                  setSearchOpen(false)
+                  setQuery('')
+                }}
                 placeholder="브랜드, 상품, 카테고리 검색"
-                className="flex-1 text-base outline-none placeholder:text-gray-300"
+                inputClassName="flex-1 text-base outline-none placeholder:text-gray-300 w-full"
               />
               <button
                 type="button"
@@ -120,12 +119,15 @@ export default function Header() {
               <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
               </svg>
-              <input
-                name="search"
+              <SearchAutocomplete
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={setQuery}
+                onSearch={(q) => {
+                  router.push(`/search?q=${encodeURIComponent(q.trim())}`)
+                  setQuery('')
+                }}
                 placeholder="상품 검색"
-                className="bg-transparent text-sm outline-none w-full placeholder:text-gray-400"
+                inputClassName="bg-transparent text-sm outline-none w-full placeholder:text-gray-400"
               />
             </div>
           </form>
