@@ -864,6 +864,13 @@ curl https://api.zslab-shop.duckdns.org/api/health
 - Frontend: HTTP 200 ✓
 - Migration: add_missing_indexes 완료 ✓
 
+## 완료된 작업 (CI 수정)
+
+### STEP 60: GitHub Actions CI 테스트 오류 수정 (2026-04-25)
+- `.github/workflows/ci.yml`: `php artisan test --parallel` → `php artisan test`
+- 원인: `brianium/paratest` 패키지 미설치로 CI 실패
+- 커밋: `fix: CI --parallel 옵션 제거` → main push 완료 ✓
+
 ## 다음 작업
 - 인증서 자동 갱신 설정 (certbot 또는 Caddy 기반)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
