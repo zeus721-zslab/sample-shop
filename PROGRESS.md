@@ -986,6 +986,17 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 
 ---
 
+## 완료된 작업 (카테고리 탭 UX 개선)
+
+### STEP 69: 소분류 카테고리 페이지 탭 추가 (2026-05-06)
+- `frontend/src/app/category/[slug]/page.tsx` 탭 로직 개선
+- **수정 전**: `subCategories.length > 0`일 때만 탭 표시 → 소분류 페이지에서 탭 미노출
+- **수정 후**: 소분류(`parentCategory` 존재)도 형제 카테고리 탭 표시
+  - 전체 탭 → 부모 카테고리 (`/category/${parentCategory.slug}`)
+  - 형제 탭 → 같은 부모의 소분류들, 현재 탭 활성화
+  - 대분류 페이지는 기존과 동일 (전체 항상 활성, 자식 탭)
+- 검증: skincare/스킨케어 활성 ✓, fashion/전체 활성 ✓, smartphones/스마트폰 활성 ✓
+
 ## 완료된 작업 (/category/[slug] 페이지 점검)
 
 ### STEP 68: /category/[slug] 전체 점검 및 버그 수정 (2026-05-06)
