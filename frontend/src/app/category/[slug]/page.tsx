@@ -98,22 +98,35 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         <p className="text-sm text-gray-400 mt-1">총 {productsRes.total.toLocaleString()}개</p>
       </div>
 
-      {/* 서브카테고리 탭 (소분류가 있을 때) */}
-      {subCategories.length > 0 && (
+      {/* 카테고리 탭
+           - 대분류 페이지: 전체(현재) + 하위 카테고리 탭
+           - 소분류 페이지: 전체(→부모) + 형제 카테고리 탭 (현재 탭 활성화)
+      */}
+      {(subCategories.length > 0 || parentCategory) && (
         <div className="flex gap-2 overflow-x-auto scrollbar-none mb-6 pb-2 border-b border-gray-100">
+          {/* 전체 탭 */}
           <Link
-            href={`/category/${slug}`}
-            className="whitespace-nowrap px-4 py-2 rounded-full text-sm border bg-gray-900 text-white border-gray-900"
+            href={parentCategory ? `/category/${parentCategory.slug}` : `/category/${slug}`}
+            className={`whitespace-nowrap px-4 py-2 rounded-full text-sm border transition-colors ${
+              !parentCategory
+                ? 'bg-gray-900 text-white border-gray-900'
+                : 'text-gray-600 border-gray-200 hover:border-gray-900'
+            }`}
           >
             전체
           </Link>
-          {subCategories.map((sub) => (
+          {/* 하위(대분류) 또는 형제(소분류) 카테고리 탭 */}
+          {(parentCategory ? siblingCategories : subCategories).map((tab) => (
             <Link
-              key={sub.id}
-              href={`/category/${sub.slug}`}
-              className="whitespace-nowrap px-4 py-2 rounded-full text-sm border text-gray-600 border-gray-200 hover:border-gray-900 transition-colors"
+              key={tab.id}
+              href={`/category/${tab.slug}`}
+              className={`whitespace-nowrap px-4 py-2 rounded-full text-sm border transition-colors ${
+                tab.slug === slug
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : 'text-gray-600 border-gray-200 hover:border-gray-900'
+              }`}
             >
-              {sub.name}
+              {tab.name}
             </Link>
           ))}
         </div>
