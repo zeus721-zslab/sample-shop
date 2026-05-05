@@ -181,9 +181,9 @@ function EditorialCard({ product, large = false }: { product: Product; large?: b
 
   return (
     <Link href={`/products/${product.slug}`} className="group block relative overflow-hidden">
-      <div className={`relative ${large ? 'aspect-[3/4] md:aspect-[7/9]' : 'aspect-[4/5]'} bg-gray-100`}>
+      <div className="relative aspect-[3/4] bg-gray-100">
         <Image
-          src={product.images[0] ?? `https://picsum.photos/seed/${product.slug}/800/1000`}
+          src={product.images[0] ?? `https://picsum.photos/seed/${product.slug}/600/800`}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
@@ -339,10 +339,10 @@ function FeedSkeleton() {
     <div className="mx-auto max-w-screen-xl px-4 py-16">
       <div className="h-5 w-24 bg-gray-100 rounded animate-pulse mb-8" />
       <div className="grid grid-cols-12 gap-3">
-        <div className="col-span-7 aspect-[7/9] bg-gray-100 rounded animate-pulse" />
+        <div className="col-span-7 aspect-[3/4] bg-gray-100 rounded animate-pulse" />
         <div className="col-span-5 grid grid-rows-2 gap-3">
-          <div className="aspect-[5/4] bg-gray-100 rounded animate-pulse" />
-          <div className="aspect-[5/4] bg-gray-100 rounded animate-pulse" />
+          <div className="aspect-[3/4] bg-gray-100 rounded animate-pulse" />
+          <div className="aspect-[3/4] bg-gray-100 rounded animate-pulse" />
         </div>
       </div>
     </div>
@@ -357,7 +357,7 @@ function ScrollSkeleton() {
         <div className="flex gap-3 overflow-hidden">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex-shrink-0 w-[200px]">
-              <div className="aspect-[4/5] bg-gray-100 rounded animate-pulse" />
+              <div className="aspect-[3/4] bg-gray-100 rounded animate-pulse" />
               <div className="mt-3 space-y-2">
                 <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3" />
                 <div className="h-3 bg-gray-100 rounded animate-pulse" />

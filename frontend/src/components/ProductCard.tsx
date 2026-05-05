@@ -15,7 +15,7 @@ interface Props {
 
 const RATIO_CLASS = {
   square:    'aspect-square',
-  portrait:  'aspect-[4/5]',
+  portrait:  'aspect-[3/4]',
   landscape: 'aspect-[3/2]',
 }
 
@@ -32,7 +32,7 @@ export default function ProductCard({ product, ratio = 'portrait', priority = fa
         {/* ── 이미지 ── */}
         <div className={`relative ${RATIO_CLASS[ratio]} bg-gray-50 overflow-hidden product-img-wrap`}>
           <Image
-            src={product.images[0] ?? `https://picsum.photos/seed/${product.slug}/600/750`}
+            src={product.images[0] ?? `https://picsum.photos/seed/${product.slug}/600/800`}
             alt={product.name}
             fill
             priority={priority}
