@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,8 +24,16 @@ class ProductController extends Controller
         $query = Product::active()
             ->with(['category:id,name,slug', 'seller:id,name,shop_name']);
 
-        if ($category = $request->get('category')) {
-            $query->whereHas('category', fn ($q) => $q->where('slug', $category));
+        if ($categorySlug = $request->get('category')) {
+            $cat = Category::where('slug', $categorySlug)->first();
+            if ($cat) {
+                // 자식 카테고리 ID 수집 (대분류면 소분류 포함)
+                $childIds = Category::where('parent_id', $cat->id)->pluck('id');
+                $ids = $childIds->prepend($cat->id);
+                $query->whereIn('category_id', $ids);
+            } else {
+                $query->whereRaw('0=1'); // 없는 카테고리면 빈 결과
+            }
         }
 
         if ($search = $request->get('search')) {
