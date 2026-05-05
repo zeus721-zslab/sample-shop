@@ -986,6 +986,32 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 
 ---
 
+## 완료된 작업 (상품 이미지 비율 통일)
+
+### STEP 70: 상품 이미지 3:4 비율 통일 + 시드 이미지 교체 (2026-05-06)
+
+**CSS 비율 고정 (3:4 통일):**
+- `ProductCard.tsx`: `aspect-[4/5]` → `aspect-[3/4]`, fallback picsum `600/750` → `600/800`
+- `page.tsx` EditorialCard: large/small 모두 `aspect-[3/4]` 통일 (기존 `aspect-[7/9]`, `aspect-[4/5]` 혼재 → 통일)
+- `page.tsx` 스켈레톤: `aspect-[7/9]`, `aspect-[5/4]`, `aspect-[4/5]` → 모두 `aspect-[3/4]`
+- 결과: `aspect-[4/5]` 잔존 0곳, `aspect-[3/4]` 64곳 적용 ✓
+
+**시드 데이터 이미지 교체:**
+- `ProductSeeder.php`: 정사각형 `600/600` → 세로 `600/800` (3:4)
+- 카테고리별 seed 그룹 적용:
+  - 패션: `men-fashion-*`, `women-fashion-*`
+  - 전자제품: `tech-phone-*`, `tech-laptop-*`, `tech-audio-*`
+  - 뷰티: `beauty-skin-*`, `beauty-makeup-*`, `health-supp-*`
+  - 식품: `food-fresh-*`, `food-ready-*`, `food-drink-*`
+  - 스포츠: `sport-fit-*`, `sport-outdoor-*`, `sport-cycle-*`, `sport-swim-*`
+  - 가구: `home-sofa-*`, `home-light-*`, `home-living-*`
+- `migrate:fresh --seed` + AdminSeeder/DemoSeeder 재실행 완료
+
+**부수 수정 - `.dockerignore` 추가:**
+- 원인: `.dockerignore` 없어서 로컬 `.next` 캐시가 Docker 빌드에 포함 → 구 HTML bake-in
+- `frontend/.dockerignore`: `node_modules`, `.next`, `.env.local` 제외
+- 효과: 빌드마다 항상 최신 API 데이터로 정적 렌더링
+
 ## 완료된 작업 (카테고리 탭 UX 개선)
 
 ### STEP 69: 소분류 카테고리 페이지 탭 추가 (2026-05-06)
