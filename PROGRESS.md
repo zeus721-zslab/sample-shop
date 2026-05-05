@@ -986,6 +986,27 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 
 ---
 
+## 완료된 작업 (/category/[slug] 페이지 점검)
+
+### STEP 68: /category/[slug] 전체 점검 및 버그 수정 (2026-05-06)
+
+**점검 결과:**
+- GET /api/categories → 200, 6대분류 31개 카테고리 ✓
+- GET /api/categories/{slug} (대분류/소분류) → 200, parent/children 포함 ✓
+- GET /api/products?category=fashion → **버그 발견**: 0개 반환 (수정 완료)
+- /category/fashion, /category/mens-clothing, /category/beauty → HTTP 200 ✓
+- 브레드크럼 (홈 > 패션/의류) ✓
+- 서브카테고리 탭 (남성의류/여성의류/아동의류/속옷양말) ✓
+- 사이드바 형제/대분류 카테고리 목록 ✓
+- 상품 그리드 + 총 개수 표시 ✓
+- 정렬 옵션 (최신/인기/가격/평점순) ✓
+
+**수정 내용:**
+- `backend/app/Http/Controllers/ProductController.php`
+  - 기존: `whereHas('category', slug)` → 대분류 직접 배정 상품만 조회 (소분류 상품 누락)
+  - 수정: Category 조회 후 자식 ID 포함 `whereIn('category_id', $ids)` 으로 변경
+  - fashion 대분류 → 남성/여성/아동/속옷 소분류 상품 모두 포함 (총 6개 정상 반환)
+
 ## 완료된 작업 (CI 테스트 수정)
 
 ### STEP 67: CI ExampleTest 수정 (2026-05-06)
