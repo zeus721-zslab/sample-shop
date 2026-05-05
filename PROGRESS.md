@@ -986,6 +986,14 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 
 ---
 
+## 완료된 작업 (CI 테스트 수정)
+
+### STEP 67: CI ExampleTest 수정 (2026-05-06)
+- `backend/tests/Feature/ExampleTest.php`: `$this->get('/')` → `$this->get('/api/health')`
+- 원인: CI 환경에 storage/framework/views 없음 → Blade 캐시 500 에러
+- API 모드이므로 web 라우트 불필요 → /api/health 로 교체
+- 커밋: `fix: ExampleTest / 라우트 → /api/health 로 변경` → main push 완료 ✓
+
 ## 다음 작업
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
 - 소셜 로그인 (Google/Kakao) 실제 연동
