@@ -142,9 +142,9 @@ async function EditorialFeed() {
       </ScrollReveal>
 
       {/* 메인 그리드 — 잡지풍 비대칭 */}
-      <div className="grid grid-cols-12 gap-3 md:gap-4">
+      <div className="grid grid-cols-12 grid-rows-[auto_auto] gap-3 md:gap-4">
         {p1 && (
-          <ScrollReveal className="col-span-12 md:col-span-7 row-span-2" delay={0.05}>
+          <ScrollReveal className="col-span-12 md:col-span-7 row-span-2 h-full" delay={0.05}>
             <EditorialCard product={p1} large />
           </ScrollReveal>
         )}
@@ -180,8 +180,8 @@ function EditorialCard({ product, large = false }: { product: Product; large?: b
   const hasSale = product.sale_price !== null && product.sale_price < product.price
 
   return (
-    <Link href={`/products/${product.slug}`} className="group block relative overflow-hidden">
-      <div className="relative aspect-[3/4] bg-gray-100">
+    <Link href={`/products/${product.slug}`} className={`group block relative overflow-hidden${large ? ' h-full' : ''}`}>
+      <div className={`relative w-full bg-gray-100${large ? ' h-full min-h-[300px]' : ' aspect-[3/4]'}`}>
         <Image
           src={product.images[0] ?? `https://picsum.photos/seed/${product.slug}/600/800`}
           alt={product.name}
