@@ -107,13 +107,13 @@ export default async function ProductsPage({ searchParams }: Props) {
                         <li key={child.id}>
                           <Link
                             href={buildHref({ category: child.slug, page: undefined })}
-                            className={`block py-1 pl-5 pr-2 text-[12px] rounded transition-colors hover:bg-gray-50 ${
+                            className={`block py-1 pl-3 pr-2 text-[12px] rounded transition-colors hover:bg-gray-50 ${
                               params.category === child.slug
                                 ? 'font-semibold text-gray-900 bg-gray-50'
                                 : 'text-gray-500 hover:text-gray-700'
                             }`}
                           >
-                            ㄴ {child.name}
+                            {child.name}
                           </Link>
                         </li>
                       ))}
