@@ -12,6 +12,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       Accept: 'application/json',
       ...(initHeaders as Record<string, string> | undefined),
     },
+    next: { revalidate: 60 },
     ...restInit,
   })
 
