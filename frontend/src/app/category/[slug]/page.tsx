@@ -106,7 +106,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
            - 소분류 페이지: 전체(→부모) + 형제 카테고리 탭 (현재 탭 활성화)
       */}
       {(subCategories.length > 0 || parentCategory) && (
-        <div className="flex gap-2 overflow-x-auto scrollbar-none mb-6 pb-2 border-b border-gray-100">
+        <div className="lg:hidden flex gap-2 overflow-x-auto scrollbar-none mb-6 pb-2 border-b border-gray-100">
           {/* 전체 탭 */}
           <Link
             href={parentCategory ? `/category/${parentCategory.slug}` : `/category/${slug}`}
