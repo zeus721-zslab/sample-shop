@@ -37,10 +37,12 @@ export default async function ProductsPage({ searchParams }: Props) {
 
   const [productsRes, categories] = await Promise.all([
     productApi.list(query),
-    categoryApi.list(true),
+    categoryApi.list(),   // tree 구조 (children 포함)
   ])
 
-  const currentCategory = categories.find((c) => c.slug === params.category)
+  // 현재 선택된 카테고리 — 부모/자식 모두 검색
+  const allCats = categories.flatMap((c) => [c, ...(c.children ?? [])])
+  const currentCategory = allCats.find((c) => c.slug === params.category)
 
   function buildHref(overrides: Partial<Record<string, string>>) {
     const next = { ...params, ...overrides }
@@ -64,30 +66,62 @@ export default async function ProductsPage({ searchParams }: Props) {
       </div>
 
       <div className="flex gap-8">
-        {/* 사이드바 — 카테고리 */}
-        <aside className="hidden lg:block w-48 flex-shrink-0">
+        {/* 사이드바 — 카테고리 트리 */}
+        <aside className="hidden lg:block w-52 flex-shrink-0">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">카테고리</p>
-          <ul className="space-y-1">
+          <ul className="space-y-0.5">
+            {/* 전체 */}
             <li>
               <Link
                 href={buildHref({ category: undefined, page: undefined })}
-                className={`block py-1.5 px-2 text-sm rounded hover:bg-gray-50 ${!params.category ? 'font-semibold text-gray-900' : 'text-gray-600'}`}
+                className={`block py-1.5 px-2 text-sm rounded transition-colors hover:bg-gray-50 ${
+                  !params.category ? 'font-bold text-gray-900 bg-gray-50' : 'text-gray-600 hover:text-gray-900'
+                }`}
               >
                 전체
               </Link>
             </li>
-            {categories
-              .filter((c) => c.parent_id === null)
-              .map((cat) => (
+            {/* 상위 카테고리 + 하위 카테고리 */}
+            {categories.map((cat) => {
+              const isParentActive = params.category === cat.slug
+              const isChildActive = cat.children?.some((ch) => ch.slug === params.category) ?? false
+              return (
                 <li key={cat.id}>
+                  {/* 상위 카테고리 — 볼드 */}
                   <Link
                     href={buildHref({ category: cat.slug, page: undefined })}
-                    className={`block py-1.5 px-2 text-sm rounded hover:bg-gray-50 ${params.category === cat.slug ? 'font-semibold text-gray-900' : 'text-gray-600'}`}
+                    className={`block py-1.5 px-2 text-sm rounded transition-colors hover:bg-gray-50 font-semibold ${
+                      isParentActive
+                        ? 'text-gray-900 bg-gray-50'
+                        : isChildActive
+                        ? 'text-gray-700'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
                   >
                     {cat.name}
                   </Link>
+                  {/* 하위 카테고리 — 들여쓰기 */}
+                  {cat.children && cat.children.length > 0 && (
+                    <ul className="mt-0.5 mb-1 space-y-0.5">
+                      {cat.children.map((child) => (
+                        <li key={child.id}>
+                          <Link
+                            href={buildHref({ category: child.slug, page: undefined })}
+                            className={`block py-1 pl-5 pr-2 text-[12px] rounded transition-colors hover:bg-gray-50 ${
+                              params.category === child.slug
+                                ? 'font-semibold text-gray-900 bg-gray-50'
+                                : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                          >
+                            ㄴ {child.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
-              ))}
+              )
+            })}
           </ul>
         </aside>
 

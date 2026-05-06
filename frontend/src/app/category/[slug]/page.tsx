@@ -37,13 +37,16 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const sort = (str(raw.sort) || 'latest') as ProductQuery['sort']
   const page = Math.max(1, Number(str(raw.page)) || 1)
 
-  // 카테고리 정보 + 전체 카테고리 목록
-  const [category, allCategories] = await Promise.all([
+  // 카테고리 정보 + 전체 카테고리 목록 (tree 구조)
+  const [category, treeCategories] = await Promise.all([
     categoryApi.get(slug).catch(() => null),
-    categoryApi.list(true).catch(() => []),
+    categoryApi.list().catch(() => []),  // tree (children 포함)
   ])
 
   if (!category) notFound()
+
+  // flat 배열 — 부모/형제/서브 탐색용
+  const allCategories = treeCategories.flatMap((c) => [c, ...(c.children ?? [])])
 
   // 서브카테고리 (해당 카테고리가 부모인 경우)
   const subCategories = allCategories.filter((c) => c.parent_id === category.id)
@@ -134,44 +137,51 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
       {/* 형제 카테고리 사이드바 + 메인 */}
       <div className="flex gap-8">
-        {/* 사이드바 */}
-        <aside className="hidden lg:block w-48 flex-shrink-0">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            {parentCategory ? parentCategory.name : '카테고리'}
-          </p>
-          <ul className="space-y-1">
-            {siblingCategories.map((cat) => (
-              <li key={cat.id}>
-                <Link
-                  href={`/category/${cat.slug}`}
-                  className={`block py-1.5 px-2 text-sm rounded hover:bg-gray-50 ${
-                    cat.slug === slug ? 'font-semibold text-gray-900 bg-gray-50' : 'text-gray-600'
-                  }`}
-                >
-                  {cat.name}
-                </Link>
-              </li>
-            ))}
+        {/* 사이드바 — 전체 카테고리 트리 */}
+        <aside className="hidden lg:block w-52 flex-shrink-0">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">카테고리</p>
+          <ul className="space-y-0.5">
+            {treeCategories.map((cat) => {
+              const isParentActive = cat.slug === slug
+              const isChildActive = cat.children?.some((ch) => ch.slug === slug) ?? false
+              return (
+                <li key={cat.id}>
+                  {/* 상위 카테고리 — 볼드 */}
+                  <Link
+                    href={`/category/${cat.slug}`}
+                    className={`block py-1.5 px-2 text-sm rounded transition-colors hover:bg-gray-50 font-semibold ${
+                      isParentActive
+                        ? 'text-gray-900 bg-gray-50'
+                        : isChildActive
+                        ? 'text-gray-700'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {cat.name}
+                  </Link>
+                  {/* 하위 카테고리 — 들여쓰기 */}
+                  {cat.children && cat.children.length > 0 && (
+                    <ul className="mt-0.5 mb-1 space-y-0.5">
+                      {cat.children.map((child) => (
+                        <li key={child.id}>
+                          <Link
+                            href={`/category/${child.slug}`}
+                            className={`block py-1 pl-5 pr-2 text-[12px] rounded transition-colors hover:bg-gray-50 ${
+                              child.slug === slug
+                                ? 'font-semibold text-gray-900 bg-gray-50'
+                                : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                          >
+                            ㄴ {child.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              )
+            })}
           </ul>
-
-          {/* 서브카테고리 (모바일 숨김, 사이드에 표시) */}
-          {subCategories.length > 0 && (
-            <div className="mt-6">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">하위 카테고리</p>
-              <ul className="space-y-1">
-                {subCategories.map((sub) => (
-                  <li key={sub.id}>
-                    <Link
-                      href={`/category/${sub.slug}`}
-                      className="block py-1.5 px-2 text-sm rounded text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    >
-                      {sub.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </aside>
 
         {/* 메인 */}

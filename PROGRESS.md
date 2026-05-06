@@ -1056,6 +1056,11 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 - GitHub Secrets 등록: PROD_SSH_HOST/USER/KEY, STG_SSH_HOST/USER/KEY
 - 소셜 로그인 (Google/Kakao) 실제 연동
 
+## 진행 중 (STEP 71: 카테고리 사이드바 트리 구조 개선)
+- [x] STEP 71-1: /products/page.tsx 사이드바 → 트리 구조 (categoryApi.list() tree + 자식 들여쓰기)
+- [x] STEP 71-2: /category/[slug]/page.tsx 사이드바 → 전체 트리 (flat→tree 전환, flatCategories 분리)
+- [x] STEP 71-3: 재빌드 + 배포 + 검증 (/products 200, /category/fashion 200, /category/mens-clothing 200)
+
 ### STEP 66: GlitchTip 완전 삭제 (2026-04-26)
 - [x] STEP 66-1: GlitchTip docker compose down -v (컨테이너/볼륨/네트워크 전체 제거)
 - [x] STEP 66-2: /home/glitchtip/ 디렉토리 삭제
