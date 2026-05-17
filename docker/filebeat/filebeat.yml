@@ -1,4 +1,15 @@
 filebeat.inputs:
+  # nginx access 로그 (JSON)
+  - type: log
+    enabled: true
+    paths:
+      - /logs/nginx/access.log
+    fields:
+      log_type: nginx_access
+    fields_under_root: false
+    json.keys_under_root: true
+    json.add_error_key: true
+
   # Laravel 애플리케이션 로그
   - type: log
     enabled: true

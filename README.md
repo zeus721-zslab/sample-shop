@@ -38,7 +38,7 @@
 ![FrankenPHP](https://img.shields.io/badge/FrankenPHP-6C41A1?style=flat-square)
 ![Node.js](https://img.shields.io/badge/Node.js_20-339933?style=flat-square&logo=node.js&logoColor=white)
 
-**Data / Search / Realtime**
+**Data / Search / Realtime** _(zslab-infra에서 별도 관리)_
 
 ![MariaDB](https://img.shields.io/badge/MariaDB_10-003545?style=flat-square&logo=mariadb&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis_7-DC382D?style=flat-square&logo=redis&logoColor=white)
@@ -54,6 +54,9 @@
 ![Caddy](https://img.shields.io/badge/Caddy_2-1F88C0?style=flat-square&logo=caddy&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=github-actions&logoColor=white)
 ![Let's Encrypt](https://img.shields.io/badge/Let's_Encrypt-003A70?style=flat-square&logo=letsencrypt&logoColor=white)
+
+> **인프라 분리**: MariaDB · Redis · Elasticsearch · Logstash · Kibana · Filebeat는 **[zslab-infra](https://github.com/zeus721-zslab/zslab-infra)** 레포에서 별도 관리됩니다.  
+> 본 레포는 `infra_net` Docker 네트워크를 통해 해당 서비스에 연결합니다.
 
 ---
 
@@ -118,7 +121,8 @@ zslab-chat (Socket.io)  :3001
 | 네트워크 | 위치 | 역할 |
 |----------|------|------|
 | `gateway_net` | `/home/gateway/` | Nginx ↔ Caddy ↔ zslab-chat 외부 연결 |
-| `zslab_net` | `/home/zslab/` | 서비스 내부 통신 (Caddy ↔ Next.js ↔ Laravel ↔ DB ↔ ELK) |
+| `zslab_net` | `/home/zslab/` | 서비스 내부 통신 (Caddy ↔ Next.js ↔ Laravel ↔ Chat) |
+| `infra_net` | `/home/zslab-infra/` | Laravel · Chat → MariaDB · Redis · ELK 연결 (외부 네트워크) |
 
 ---
 
@@ -240,7 +244,13 @@ Chat          POST   /api/chat/token
 
 **필요 환경:** Docker 24+, Docker Compose v2
 
+> **사전 조건:** `zslab-infra` 스택이 먼저 실행 중이어야 합니다.  
+> `infra_net` 외부 네트워크가 생성되어 있지 않으면 기동에 실패합니다.
+
 ```bash
+# 0. (최초 1회) zslab-infra 스택 기동 후 infra_net 네트워크 확인
+docker network ls | grep infra_net
+
 # 1. 환경변수 설정
 cp .env.example .env
 # APP_KEY, DB/Redis 비밀번호, 도메인 등 수정
@@ -309,17 +319,17 @@ curl https://zslab-shop.duckdns.org/api/health
 │
 ├── docker/
 │   ├── caddy/                       # Caddyfile (내부 path-based 라우팅)
-│   ├── elasticsearch/               # ES 설정
-│   ├── filebeat/                    # filebeat.yml (Laravel 로그 수집, multiline)
+│   ├── filebeat/                    # filebeat.yml (Laravel 로그 수집 → infra_net Logstash)
 │   ├── frankenphp/                  # PHP 설정, Worker 모드
-│   ├── kibana/                      # kibana.yml (basePath=/kibana)
-│   ├── logstash/                    # Grok 파이프라인 (Laravel → ES 인덱스)
-│   ├── mariadb/                     # MariaDB 설정
-│   └── redis/                       # Redis 설정
+│   ├── kibana/                      # kibana.yml (basePath=/kibana) — zslab-infra 참조용
+│   ├── elasticsearch/               # ES 설정 — zslab-infra 참조용
+│   ├── logstash/                    # Grok 파이프라인 — zslab-infra 참조용
+│   ├── mariadb/                     # MariaDB 설정 — zslab-infra 참조용
+│   └── redis/                       # Redis 설정 — zslab-infra 참조용
 │
 ├── scripts/                         # 운영 헬퍼 스크립트
 ├── .github/workflows/               # CI/CD 파이프라인 (ci / deploy-staging / deploy-production)
-├── docker-compose.yml               # 운영 스택 (18개 서비스)
+├── docker-compose.yml               # 운영 스택 (5개 서비스: caddy · frontend · api · socket · zslab-chat)
 ├── docker-compose.stg.yml           # 스테이징 스택
 └── .env.example                     # 환경변수 템플릿
 ```
