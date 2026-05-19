@@ -25,6 +25,12 @@
 ## 현재 진행 중
 - [x] STEP 11: 전체 기동 및 확인 — 완료
 
+## STEP 39: search 자모 검색 미동작 수정 (2026-05-19)
+- [x] STEP 39-1: SearchService.php search() 에서 .fuzzyField('name_jamo') 포함 여부 확인
+- [x] STEP 39-2: 누락 시 .fuzzyField('name_jamo') 추가 — SearchService.php:26 에 추가 완료 (SearchBuilder/SuggestBuilder 자모 토큰 처리도 개선)
+- [x] STEP 39-3: docker restart zslab_api — 완료
+- [x] STEP 39-4: curl 검증 — "셫" 검색 시 셔츠 포함 확인 — "클래식 슬림핏 셔츠" 1건 반환, 정상
+
 ## STEP 12: CI zslab-search 패키지 경로 수정 (2026-05-19)
 - [x] STEP 12-1: backend/packages/zslab-search 패키지 파일 복사
 - [x] STEP 12-2: ci.yml "Prepare local packages" 스텝 추가
@@ -1119,6 +1125,10 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
   - `docker-compose.yml` frontend env에 `SENTRY_DSN` + `NEXT_PUBLIC_SENTRY_DSN` 추가 (런타임 주입)
   - 테스트 에러 전송 → GlitchTip project=2 이슈 1건 수집 확인 ✓
 
+### STEP 72: CI zslab-search 패키지 경로 준비 스텝 추가 (2026-05-19)
+- [x] STEP 72-1: .github/workflows/ci.yml — "Install Composer dependencies" 앞에 "Prepare local packages" 스텝 추가
+- [x] STEP 72-2: 추가된 위치 확인
+
 ## 오류 기록
 - STEP 11 자동 실행 불가: zslab 계정이 docker 그룹에 미포함
   → `usermod -aG docker zslab` 후 재로그인 필요
@@ -1169,3 +1179,7 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 - [x] STEP JAMO-5: 검증 완료
   - suggest: /api/search/suggest?q=셫 → "클래식 슬림핏 셔츠" 반환 ✓
   - products: /api/products?q=셫 → 셔츠 포함 49건 반환 ✓
+
+## STEP 55: Dockerfile runner 스테이지에 zslab-search 복사 추가 (2026-05-19)
+- [x] STEP 55-1: backend/Dockerfile runner 스테이지에 COPY --from=build 줄 추가
+- [x] STEP 55-2: 변경 부분 확인

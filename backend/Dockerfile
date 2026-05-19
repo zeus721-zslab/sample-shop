@@ -31,6 +31,7 @@ RUN composer dump-autoload --optimize --no-dev --no-scripts
 
 FROM base AS runner
 COPY --from=build /app /app
+COPY --from=build /home/zslab-infra/zslab-search /home/zslab-infra/zslab-search
 RUN rm -f bootstrap/cache/packages.php bootstrap/cache/services.php \
     && php artisan package:discover --ansi \
     && php artisan config:cache \
