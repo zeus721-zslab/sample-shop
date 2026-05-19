@@ -1145,3 +1145,12 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 - [x] STEP 73-4: 심볼릭 링크 확인
 - [x] STEP 73-5: 기존 복사본 /home/zslab/backend/packages/zslab-search 삭제
 - [x] STEP 73-6: 검증 (검색 API 정상 동작)
+
+## STEP 74: docker-compose.yml 경로 .env 변수로 교체 + git history 보안 처리 (2026-05-19)
+- [x] STEP 74-1: docker-compose.yml 경로 → ${ZSLAB_SEARCH_PATH} 변수로 교체 (sed -i)
+- [x] STEP 74-2: .env에 ZSLAB_SEARCH_PATH 추가 / .env.example에 ZSLAB_SEARCH_PATH= 추가
+- [x] STEP 74-3: .gitignore .env 포함 여부 확인 (이미 확인됨 ✓)
+- [x] STEP 74-4: git log로 경로 최초 등장 커밋 확인 (e46ce62에서 추가됨)
+- [x] STEP 74-5: git filter-branch로 git history에서 경로 제거 (74개 커밋 재작성)
+- [ ] STEP 74-6: git push --force origin main
+- [ ] STEP 74-7: 컨테이너 재시작 (ZSLAB_SEARCH_PATH 적용) + 검색 API 검증
