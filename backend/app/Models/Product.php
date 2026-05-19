@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Zslab\Search\Contracts\Searchable;
+use Zslab\Search\Utils\JamoConverter;
 
 class Product extends Model implements Searchable
 {
@@ -72,6 +73,7 @@ class Product extends Model implements Searchable
             'id'            => $this->id,
             'name'          => $this->name,
             'name_suggest'  => $this->name,
+            'name_jamo'     => JamoConverter::convert($this->name),
             'slug'          => $this->slug,
             'description'   => $this->description ?? '',
             'category_name' => $this->category?->name ?? '',

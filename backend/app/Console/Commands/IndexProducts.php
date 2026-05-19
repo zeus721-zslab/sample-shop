@@ -18,6 +18,7 @@ class IndexProducts extends Command
             'id'            => ['type' => 'integer'],
             'name'          => ['type' => 'text', 'analyzer' => 'nori_ngram_analyzer', 'search_analyzer' => 'nori_search_analyzer'],
             'name_suggest'  => ['type' => 'search_as_you_type'],
+            'name_jamo'     => ['type' => 'text', 'analyzer' => 'jamo_analyzer', 'search_analyzer' => 'jamo_search_analyzer'],
             'slug'          => ['type' => 'keyword'],
             'description'   => ['type' => 'text', 'analyzer' => 'nori_ngram_analyzer', 'search_analyzer' => 'nori_search_analyzer'],
             'category_name' => ['type' => 'text', 'analyzer' => 'nori_ngram_analyzer', 'search_analyzer' => 'nori_search_analyzer'],

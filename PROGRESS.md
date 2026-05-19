@@ -1159,3 +1159,13 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 - [x] STEP 74-5: git filter-branch로 git history에서 경로 제거 (74개 커밋 재작성)
 - [x] STEP 74-6: git push --force origin main
 - [x] STEP 74-7: 컨테이너 재시작 (ZSLAB_SEARCH_PATH 적용) + 검색 API 검증 ✓
+
+## STEP JAMO-SHOP: shop 자모 검색 추가 (2026-05-19)
+사전 확인: JamoConverter.php ✅ / AnalyzerPresets.php jamo_analyzer ✅ / SuggestBuilder JamoConverter::convert() ✅
+- [x] STEP JAMO-1: Product.php — name_jamo 추가 (JamoConverter 사용)
+- [x] STEP JAMO-2: IndexProducts.php — name_jamo 매핑 추가
+- [x] STEP JAMO-3: SearchService.php — fuzzyField('name') → fuzzyField('name_jamo')
+- [x] STEP JAMO-4: 재색인 + 재시작 (products:index --fresh, 50건 완료)
+- [x] STEP JAMO-5: 검증 완료
+  - suggest: /api/search/suggest?q=셫 → "클래식 슬림핏 셔츠" 반환 ✓
+  - products: /api/products?q=셫 → 셔츠 포함 49건 반환 ✓

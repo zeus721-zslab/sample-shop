@@ -79,7 +79,7 @@ class SearchService
         $hits = $this->suggestBuilder
             ->index(Product::getSearchIndex())
             ->field('name_suggest')
-            ->fuzzyField('name')
+            ->fuzzyField('name_jamo')
             ->query($query)
             ->size($size)
             ->suggest();
