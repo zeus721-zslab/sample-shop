@@ -25,6 +25,11 @@
 ## 현재 진행 중
 - [x] STEP 11: 전체 기동 및 확인 — 완료
 
+## STEP 12: CI zslab-search 패키지 경로 수정 (2026-05-19)
+- [x] STEP 12-1: backend/packages/zslab-search 패키지 파일 복사
+- [x] STEP 12-2: ci.yml "Prepare local packages" 스텝 추가
+- [ ] STEP 12-3: git commit + push
+
 ## STEP 11 상태
 zslab 계정이 docker 그룹에 포함되어 있지 않아 자동 실행 불가.
 아래 명령을 root 또는 권한 있는 계정으로 실행 필요:
