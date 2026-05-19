@@ -23,6 +23,7 @@ class SearchService
             ->index(Product::getSearchIndex())
             ->fields(Product::getSearchFields())
             ->query($query)
+            ->fuzzyField('name_jamo')
             ->filter(['status' => 'active'])
             ->page($page, $perPage)
             ->fallback(function () use ($query, $page, $perPage): PaginatedResult {

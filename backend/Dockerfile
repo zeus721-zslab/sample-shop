@@ -24,6 +24,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 FROM base AS build
 COPY composer.json composer.lock ./
+COPY packages/zslab-search /home/zslab-infra/zslab-search
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 COPY . .
 RUN composer dump-autoload --optimize --no-dev --no-scripts
