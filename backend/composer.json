@@ -5,12 +5,20 @@
     "description": "The skeleton application for the Laravel framework.",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "./packages/zslab-search",
+            "options": { "symlink": false }
+        }
+    ],
     "require": {
         "php": "^8.3",
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
-        "sentry/sentry-laravel": "^4.25"
+        "sentry/sentry-laravel": "^4.25",
+        "zslab/search": "dev-main"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -82,6 +90,6 @@
             "php-http/discovery": true
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 }

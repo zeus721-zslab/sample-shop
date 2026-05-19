@@ -1128,3 +1128,12 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
   - /home/portfolio/docker-compose.yml: Caddyfile.d 볼륨 마운트 추가, zslab_zslab_net external 네트워크 추가
   - zslab docker-compose.yml: caddy 외부 포트 제거, portfolio_portfolio_net 공유
   - 재빌드 시에도 shop.caddyfile 유지됨
+
+## STEP 72: zslab-search 패키지 교체 (2026-05-19)
+- [x] STEP 72-1: zslab-search 패키지 설치 (composer)
+- [x] STEP 72-2: config 퍼블리싱 + .env 추가
+- [x] STEP 72-3: Product 모델 Searchable 인터페이스 구현
+- [x] STEP 72-4: SearchService → 패키지로 교체 (Legacy 백업)
+- [x] STEP 72-5: IndexProducts 커맨드 패키지로 교체
+- [x] STEP 72-6: 인덱스 재구성 (nori_ngram + 재색인 50건)
+- [x] STEP 72-7: 검증

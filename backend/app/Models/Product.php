@@ -5,8 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Zslab\Search\Contracts\Searchable;
 
-class Product extends Model
+class Product extends Model implements Searchable
 {
     protected $fillable = [
         'category_id', 'seller_id', 'name', 'slug', 'description', 'detail',
@@ -63,5 +64,33 @@ class Product extends Model
     public function getEffectivePriceAttribute(): int
     {
         return $this->sale_price ?? $this->price;
+    }
+
+    public function toSearchArray(): array
+    {
+        return [
+            'id'            => $this->id,
+            'name'          => $this->name,
+            'name_suggest'  => $this->name,
+            'slug'          => $this->slug,
+            'description'   => $this->description ?? '',
+            'category_name' => $this->category?->name ?? '',
+            'price'         => $this->price,
+            'sale_price'    => $this->sale_price,
+            'status'        => $this->status,
+            'order_count'   => $this->order_count,
+            'rating_avg'    => $this->rating_avg,
+            'images'        => $this->images ?? [],
+        ];
+    }
+
+    public static function getSearchIndex(): string
+    {
+        return 'zslab_products';
+    }
+
+    public static function getSearchFields(): array
+    {
+        return ['name^3', 'description^1', 'category_name^2'];
     }
 }

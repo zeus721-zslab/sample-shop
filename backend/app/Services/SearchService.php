@@ -3,88 +3,54 @@
 namespace App\Services;
 
 use App\Models\Product;
-use Illuminate\Support\Facades\Http;
+use Zslab\Search\Search\PaginatedResult;
+use Zslab\Search\Search\SearchBuilder;
+use Zslab\Search\Search\SuggestBuilder;
 use Illuminate\Support\Facades\Log;
 
 class SearchService
 {
-    private string $host;
-    private string $index;
-
-    public function __construct()
-    {
-        $this->host  = rtrim(config('services.elasticsearch.host', 'http://elasticsearch:9200'), '/');
-        $this->index = config('services.elasticsearch.index', 'zslab_products');
-    }
+    public function __construct(
+        private SearchBuilder  $searchBuilder,
+        private SuggestBuilder $suggestBuilder,
+    ) {}
 
     /* ── 검색 (ES → DB fallback) ─────────────────────────────────────────── */
 
     public function search(string $query, int $page = 1, int $perPage = 20): array
     {
-        try {
-            return $this->searchEs($query, $page, $perPage);
-        } catch (\Throwable $e) {
-            Log::warning('Elasticsearch unavailable, falling back to DB.', ['error' => $e->getMessage()]);
-            return $this->searchDb($query, $page, $perPage);
+        $result = $this->searchBuilder
+            ->index(Product::getSearchIndex())
+            ->fields(Product::getSearchFields())
+            ->query($query)
+            ->filter(['status' => 'active'])
+            ->page($page, $perPage)
+            ->fallback(function () use ($query, $page, $perPage): PaginatedResult {
+                Log::warning('Elasticsearch unavailable, falling back to DB.');
+                return $this->dbSearchAsPaginatedResult($query, $page, $perPage);
+            })
+            ->search();
+
+        // ES가 결과를 반환한 경우 → IDs로 DB 재조회 (최신 데이터 보장, ES 정렬 유지)
+        if (!empty($result->ids)) {
+            $products = Product::with('category')
+                ->whereIn('id', $result->ids)
+                ->get()
+                ->keyBy('id');
+
+            $ordered = array_values(array_filter(
+                array_map(fn($id) => $products->get($id)?->toArray(), $result->ids)
+            ));
+
+            return $this->paginate($ordered, $result->total, $page, $perPage);
         }
+
+        // DB fallback 또는 genuine empty 결과
+        // fallback이 호출된 경우 $result->data 에 DB 데이터가 담겨 있음
+        return $this->paginate($result->data, $result->total, $page, $perPage);
     }
 
-    private function searchEs(string $query, int $page, int $perPage): array
-    {
-        $body = [
-            'from' => ($page - 1) * $perPage,
-            'size' => $perPage,
-            'query' => [
-                'bool' => [
-                    'must'   => [
-                        'multi_match' => [
-                            'query'    => $query,
-                            'fields'   => ['name^3', 'description^1', 'category_name^2'],
-                            'operator' => 'or',
-                        ],
-                    ],
-                    'filter' => [
-                        ['term' => ['status' => 'active']],
-                    ],
-                ],
-            ],
-            'sort' => [
-                ['_score' => 'desc'],
-                ['order_count' => 'desc'],
-            ],
-        ];
-
-        $response = Http::timeout(3)
-            ->post("{$this->host}/{$this->index}/_search", $body);
-
-        if ($response->failed()) {
-            throw new \RuntimeException('ES search failed: ' . $response->status());
-        }
-
-        $json  = $response->json();
-        $hits  = $json['hits']['hits'] ?? [];
-        $total = $json['hits']['total']['value'] ?? 0;
-
-        // ES 결과에서 product_id 추출 → DB에서 최신 데이터로 보강
-        $ids = array_map(fn ($h) => $h['_id'], $hits);
-        if (empty($ids)) {
-            return $this->paginate([], $total, $page, $perPage);
-        }
-
-        $products = Product::with('category')
-            ->whereIn('id', $ids)
-            ->get()
-            ->keyBy('id');
-
-        // ES 정렬 순서 유지
-        $ordered = array_values(array_filter(
-            array_map(fn ($id) => $products->get($id)?->toArray(), $ids)
-        ));
-
-        return $this->paginate($ordered, $total, $page, $perPage);
-    }
-
-    private function searchDb(string $query, int $page, int $perPage): array
+    private function dbSearchAsPaginatedResult(string $query, int $page, int $perPage): PaginatedResult
     {
         $q = Product::with('category')
             ->where('status', 'active')
@@ -97,67 +63,47 @@ class SearchService
         $total    = $q->count();
         $products = $q->forPage($page, $perPage)->get()->toArray();
 
-        return $this->paginate($products, $total, $page, $perPage);
+        return new PaginatedResult(
+            total:       $total,
+            currentPage: $page,
+            perPage:     $perPage,
+            data:        $products,
+            ids:         [],
+        );
     }
 
     /* ── 자동완성 (suggest) ─────────────────────────────────────────────── */
 
     public function suggest(string $query, int $size = 5): array
     {
-        try {
-            return $this->suggestEs($query, $size);
-        } catch (\Throwable $e) {
-            Log::warning('ES suggest unavailable, falling back to DB.', ['error' => $e->getMessage()]);
-            return $this->suggestDb($query, $size);
-        }
-    }
+        $hits = $this->suggestBuilder
+            ->index(Product::getSearchIndex())
+            ->field('name_suggest')
+            ->query($query)
+            ->size($size)
+            ->suggest();
 
-    private function suggestEs(string $query, int $size): array
-    {
-        $body = [
-            'size'    => $size,
-            '_source' => ['id', 'name', 'slug', 'images'],
-            'query'   => [
-                'bool' => [
-                    'must'   => [[
-                        'multi_match' => [
-                            'query'  => $query,
-                            'type'   => 'bool_prefix',
-                            'fields' => [
-                                'name_suggest',
-                                'name_suggest._2gram',
-                                'name_suggest._3gram',
-                            ],
-                        ],
-                    ]],
-                    'filter' => [['term' => ['status' => 'active']]],
-                ],
-            ],
-            'sort' => [['_score' => 'desc'], ['order_count' => 'desc']],
-        ];
-
-        $response = Http::timeout(2)->post("{$this->host}/{$this->index}/_search", $body);
-
-        if ($response->failed()) {
-            throw new \RuntimeException('ES suggest failed: ' . $response->status());
+        // SuggestBuilder는 ES 장애 시 빈 배열 반환 → DB fallback
+        if (empty($hits)) {
+            return $this->dbFallbackSuggest($query, $size);
         }
 
-        return array_map(fn ($h) => [
-            'id'    => (int) $h['_id'],
-            'name'  => $h['_source']['name'],
-            'slug'  => $h['_source']['slug'],
-            'image' => $h['_source']['images'][0] ?? null,
-        ], $response->json()['hits']['hits'] ?? []);
+        return array_map(fn($src) => [
+            'id'    => (int) ($src['id'] ?? 0),
+            'name'  => $src['name'] ?? '',
+            'slug'  => $src['slug'] ?? '',
+            'image' => $src['images'][0] ?? null,
+        ], $hits);
     }
 
-    private function suggestDb(string $query, int $size): array
+    private function dbFallbackSuggest(string $query, int $size): array
     {
         return Product::where('status', 'active')
             ->where('name', 'like', "%{$query}%")
             ->orderByDesc('order_count')
             ->limit($size)
             ->get(['id', 'name', 'slug', 'images'])
-            ->map(fn ($p) => [
+            ->map(fn($p) => [
                 'id'    => $p->id,
                 'name'  => $p->name,
                 'slug'  => $p->slug,
@@ -165,107 +111,6 @@ class SearchService
             ])
             ->values()
             ->toArray();
-    }
-
-    /* ── 인덱싱 ──────────────────────────────────────────────────────────── */
-
-    public function indexProduct(Product $product): void
-    {
-        $doc = [
-            'id'            => $product->id,
-            'name'          => $product->name,
-            'name_suggest'  => $product->name,   // search_as_you_type 필드
-            'slug'          => $product->slug,
-            'description'   => $product->description ?? '',
-            'category_name' => $product->category?->name ?? '',
-            'price'         => $product->price,
-            'sale_price'    => $product->sale_price,
-            'status'        => $product->status,
-            'order_count'   => $product->order_count,
-            'rating_avg'    => $product->rating_avg,
-            'images'        => $product->images ?? [],
-        ];
-
-        Http::timeout(5)
-            ->put("{$this->host}/{$this->index}/_doc/{$product->id}", $doc);
-    }
-
-    public function deleteProduct(int $productId): void
-    {
-        Http::timeout(3)
-            ->delete("{$this->host}/{$this->index}/_doc/{$productId}");
-    }
-
-    public function ensureIndex(): void
-    {
-        $url = "{$this->host}/{$this->index}";
-
-        $exists = Http::timeout(5)->head($url);
-        if ($exists->successful()) {
-            return; // 이미 존재
-        }
-
-        Http::timeout(5)->put($url, [
-            'settings' => [
-                'number_of_shards'   => 1,
-                'number_of_replicas' => 0,
-                'max_ngram_diff'     => 9,   // max_gram(10) - min_gram(2) - 1
-                'analysis' => [
-                    'tokenizer' => [
-                        'ngram_tokenizer' => [
-                            'type'        => 'ngram',
-                            'min_gram'    => 2,
-                            'max_gram'    => 10,
-                            'token_chars' => ['letter', 'digit'],
-                        ],
-                    ],
-                    'analyzer' => [
-                        // 인덱싱: ngram으로 모든 부분 문자열 토큰화
-                        'korean_ngram' => [
-                            'type'      => 'custom',
-                            'tokenizer' => 'ngram_tokenizer',
-                            'filter'    => ['lowercase'],
-                        ],
-                        // 검색: 입력어를 그대로 토큰화 (ngram 미적용)
-                        'korean_search' => [
-                            'type'      => 'custom',
-                            'tokenizer' => 'standard',
-                            'filter'    => ['lowercase'],
-                        ],
-                    ],
-                ],
-            ],
-            'mappings' => [
-                'properties' => [
-                    'id'            => ['type' => 'integer'],
-                    'name'          => ['type' => 'text', 'analyzer' => 'korean_ngram', 'search_analyzer' => 'korean_search'],
-                    'name_suggest'  => ['type' => 'search_as_you_type'],
-                    'slug'          => ['type' => 'keyword'],
-                    'description'   => ['type' => 'text', 'analyzer' => 'korean_ngram', 'search_analyzer' => 'korean_search'],
-                    'category_name' => ['type' => 'text', 'analyzer' => 'korean_ngram', 'search_analyzer' => 'korean_search'],
-                    'price'         => ['type' => 'integer'],
-                    'sale_price'    => ['type' => 'integer'],
-                    'status'        => ['type' => 'keyword'],
-                    'order_count'   => ['type' => 'integer'],
-                    'rating_avg'    => ['type' => 'float'],
-                    'images'        => ['type' => 'keyword', 'index' => false],
-                ],
-            ],
-        ]);
-    }
-
-    /**
-     * 기존 인덱스에 name_suggest 필드 추가 (PUT mapping)
-     */
-    public function updateMapping(): bool
-    {
-        $response = Http::timeout(5)->put("{$this->host}/{$this->index}/_mapping", [
-            'properties' => [
-                'name_suggest' => ['type' => 'search_as_you_type'],
-            ],
-        ]);
-
-        return $response->successful();
     }
 
     /* ── 유틸 ────────────────────────────────────────────────────────────── */

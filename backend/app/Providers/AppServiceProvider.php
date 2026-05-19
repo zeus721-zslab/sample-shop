@@ -21,7 +21,10 @@ class AppServiceProvider extends ServiceProvider
             };
         });
 
-        $this->app->singleton(SearchService::class, fn () => new SearchService());
+        $this->app->singleton(SearchService::class, fn ($app) => new SearchService(
+            $app->make(\Zslab\Search\Search\SearchBuilder::class),
+            $app->make(\Zslab\Search\Search\SuggestBuilder::class),
+        ));
         $this->app->singleton(ReviewService::class, fn () => new ReviewService());
     }
 
