@@ -8,8 +8,8 @@
     "repositories": [
         {
             "type": "path",
-            "url": "./packages/zslab-search",
-            "options": { "symlink": false }
+            "url": "/home/zslab-infra/zslab-search",
+            "options": { "symlink": true }
         }
     ],
     "require": {

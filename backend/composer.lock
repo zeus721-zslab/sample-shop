@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ca03a96dcdde09f057dd2d2c7337780c",
+    "content-hash": "4360518e076f3f2bbc3e11ef9f86730c",
     "packages": [
         {
             "name": "brick/math",
@@ -6947,8 +6947,8 @@
             "version": "dev-main",
             "dist": {
                 "type": "path",
-                "url": "./packages/zslab-search",
-                "reference": "15fde4f681b26537d6c6eea13d709f229c78666f"
+                "url": "/home/zslab-infra/zslab-search",
+                "reference": "07501249e9896cd11c9ed6d1500ed1518d611419"
             },
             "require": {
                 "elasticsearch/elasticsearch": "^8.0",
@@ -6969,8 +6969,8 @@
             },
             "description": "Zslab 공용 Elasticsearch 검색 패키지",
             "transport-options": {
-                "symlink": false,
-                "relative": true
+                "symlink": true,
+                "relative": false
             }
         }
     ],

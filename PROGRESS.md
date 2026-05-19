@@ -1137,3 +1137,11 @@ cron → certbot-renew.sh → certbot/certbot docker renew (webroot challenge)
 - [x] STEP 72-5: IndexProducts 커맨드 패키지로 교체
 - [x] STEP 72-6: 인덱스 재구성 (nori_ngram + 재색인 50건)
 - [x] STEP 72-7: 검증
+
+## STEP 73: zslab-search 패키지 경로를 zslab-infra로 교체 (2026-05-19)
+- [x] STEP 73-1: docker-compose.yml app volumes에 zslab-infra 마운트 추가
+- [x] STEP 73-2: composer.json path repository URL 변경 + symlink: true
+- [x] STEP 73-3: 컨테이너 재시작 + composer install
+- [x] STEP 73-4: 심볼릭 링크 확인
+- [x] STEP 73-5: 기존 복사본 /home/zslab/backend/packages/zslab-search 삭제
+- [x] STEP 73-6: 검증 (검색 API 정상 동작)

@@ -56,6 +56,7 @@ services:
       - ./backend:/app
       - ./docker/frankenphp/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./docker/frankenphp/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
+      - ${ZSLAB_SEARCH_PATH}:/home/zslab-infra/zslab-search:ro
     networks:
       - zslab_net
       - infra_net
